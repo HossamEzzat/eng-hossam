@@ -1,6 +1,24 @@
+# Deploy — Programming with Eng. Hossam
+
+## Live site (GitHub Pages)
+
+**URL:** https://hossamezzat.github.io/eng-hossam/  
+**Admin:** https://hossamezzat.github.io/eng-hossam/admin/login  
+
+Repo: https://github.com/HossamEzzat/eng-hossam  
+
+### Redeploy to GitHub Pages
+
+```bash
+flutter build web --release --base-href /eng-hossam/
+# then publish build/web to the gh-pages branch
+```
+
+---
+
 # Deploy to Firebase Hosting
 
-Step-by-step production launch for **Programming with Eng. Hossam**.
+Step-by-step production launch (optional alternative to GitHub Pages).
 
 ## Prerequisites
 
