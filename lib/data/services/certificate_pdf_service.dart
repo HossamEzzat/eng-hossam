@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:lumina/data/models/registration.dart';
 import 'package:lumina/data/services/certificate_content.dart';
+import 'package:lumina/data/services/pdf_arabic_text.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -32,15 +33,19 @@ class CertificatePdfService {
     final bodySemi = await PdfGoogleFonts.sourceSans3SemiBold();
     final bodyBold = await PdfGoogleFonts.sourceSans3Bold();
     final script = await PdfGoogleFonts.greatVibesRegular();
-    final arabic = await PdfGoogleFonts.notoSansArabicRegular();
-    final arabicBold = await PdfGoogleFonts.notoSansArabicBold();
-
-    final fallback = [arabic, arabicBold];
+    // Tajawal shapes Arabic reliably for PDF print.
+    final arabic = await PdfGoogleFonts.tajawalRegular();
+    final arabicBold = await PdfGoogleFonts.tajawalBold();
 
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4.landscape,
         margin: pw.EdgeInsets.zero,
+        theme: pw.ThemeData.withFont(
+          base: body,
+          bold: bodyBold,
+          fontFallback: [arabic, arabicBold],
+        ),
         build: (context) {
           return pw.Container(
             color: CertificatePalette.paperEdge,
@@ -63,7 +68,6 @@ class CertificatePdfService {
                 ),
                 child: pw.Stack(
                   children: [
-                    // Soft paper wash
                     pw.Positioned.fill(
                       child: pw.Container(
                         decoration: pw.BoxDecoration(
@@ -79,7 +83,6 @@ class CertificatePdfService {
                         ),
                       ),
                     ),
-                    // Programming watermark
                     pw.Center(
                       child: pw.Opacity(
                         opacity: 0.045,
@@ -93,7 +96,6 @@ class CertificatePdfService {
                         ),
                       ),
                     ),
-                    // Subtle geometric accents
                     pw.Positioned(
                       left: 36,
                       top: 36,
@@ -148,15 +150,12 @@ class CertificatePdfService {
                             ),
                           ),
                           pw.SizedBox(height: 4),
-                          pw.Text(
+                          PdfArabicText.build(
                             content.titleAr,
-                            textAlign: pw.TextAlign.center,
-                            style: pw.TextStyle(
-                              font: arabicBold,
-                              fontSize: 13,
-                              color: CertificatePalette.muted,
-                            ),
-                            textDirection: pw.TextDirection.rtl,
+                            latinFont: bodySemi,
+                            arabicFont: arabicBold,
+                            fontSize: 14,
+                            color: CertificatePalette.muted,
                           ),
                           pw.SizedBox(height: 18),
                           pw.Text(
@@ -170,15 +169,12 @@ class CertificatePdfService {
                             ),
                           ),
                           pw.SizedBox(height: 10),
-                          pw.Text(
+                          PdfArabicText.build(
                             content.studentName,
-                            textAlign: pw.TextAlign.center,
-                            style: pw.TextStyle(
-                              font: display,
-                              fontFallback: fallback,
-                              fontSize: 34,
-                              color: CertificatePalette.ink,
-                            ),
+                            latinFont: display,
+                            arabicFont: arabicBold,
+                            fontSize: 34,
+                            color: CertificatePalette.ink,
                           ),
                           pw.SizedBox(height: 6),
                           pw.Center(
@@ -199,15 +195,12 @@ class CertificatePdfService {
                             ),
                           ),
                           pw.SizedBox(height: 8),
-                          pw.Text(
+                          PdfArabicText.build(
                             content.sessionName,
-                            textAlign: pw.TextAlign.center,
-                            style: pw.TextStyle(
-                              font: displayReg,
-                              fontFallback: fallback,
-                              fontSize: 15,
-                              color: CertificatePalette.navySoft,
-                            ),
+                            latinFont: displayReg,
+                            arabicFont: arabicBold,
+                            fontSize: 15,
+                            color: CertificatePalette.navySoft,
                           ),
                           pw.SizedBox(height: 20),
                           pw.Row(
@@ -217,33 +210,37 @@ class CertificatePdfService {
                               _metaBlock(
                                 'Registration ID',
                                 content.registrationId,
-                                body,
-                                bodySemi,
+                                latinBody: body,
+                                latinBold: bodySemi,
+                                arabicBold: arabicBold,
                               ),
                               _metaBlock(
                                 'Certificate No.',
                                 content.certificateNumber,
-                                body,
-                                bodySemi,
+                                latinBody: body,
+                                latinBold: bodySemi,
+                                arabicBold: arabicBold,
                               ),
                               _metaBlock(
                                 'Branch',
                                 content.branch,
-                                body,
-                                bodySemi,
+                                latinBody: body,
+                                latinBold: bodySemi,
+                                arabicBold: arabicBold,
                               ),
                               _metaBlock(
                                 'Grade',
                                 content.grade,
-                                body,
-                                bodySemi,
-                                fallback: fallback,
+                                latinBody: body,
+                                latinBold: bodySemi,
+                                arabicBold: arabicBold,
                               ),
                               _metaBlock(
                                 'Attendance Date',
                                 content.attendanceDateLabel,
-                                body,
-                                bodySemi,
+                                latinBody: body,
+                                latinBold: bodySemi,
+                                arabicBold: arabicBold,
                               ),
                             ],
                           ),
@@ -503,10 +500,10 @@ class CertificatePdfService {
 
   pw.Widget _metaBlock(
     String label,
-    String value,
-    pw.Font body,
-    pw.Font bold, {
-    List<pw.Font>? fallback,
+    String value, {
+    required pw.Font latinBody,
+    required pw.Font latinBold,
+    required pw.Font arabicBold,
   }) {
     return pw.ConstrainedBox(
       constraints: const pw.BoxConstraints(maxWidth: 130),
@@ -516,7 +513,7 @@ class CertificatePdfService {
             label.toUpperCase(),
             textAlign: pw.TextAlign.center,
             style: pw.TextStyle(
-              font: body,
+              font: latinBody,
               fontSize: 7,
               letterSpacing: 0.7,
               color: CertificatePalette.muted,
@@ -533,15 +530,12 @@ class CertificatePdfService {
                 ),
               ),
             ),
-            child: pw.Text(
+            child: PdfArabicText.build(
               value,
-              textAlign: pw.TextAlign.center,
-              style: pw.TextStyle(
-                font: bold,
-                fontFallback: fallback ?? <pw.Font>[],
-                fontSize: 9.5,
-                color: CertificatePalette.ink,
-              ),
+              latinFont: latinBold,
+              arabicFont: arabicBold,
+              fontSize: 9.5,
+              color: CertificatePalette.ink,
             ),
           ),
         ],

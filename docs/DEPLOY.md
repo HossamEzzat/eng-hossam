@@ -10,7 +10,7 @@ Repo: https://github.com/HossamEzzat/eng-hossam
 ### Redeploy to GitHub Pages
 
 ```bash
-flutter build web --release --base-href /eng-hossam/
+flutter build web --release --base-href /eng-hossam/ --dart-define=use_arabic=true
 # then publish build/web to the gh-pages branch
 ```
 
