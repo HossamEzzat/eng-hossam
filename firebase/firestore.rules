@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function bootstrapOpen() {
+      return !exists(/databases/$(database)/documents/config/bootstrap)
+        || get(/databases/$(database)/documents/config/bootstrap).data.adminCreated != true;
+    }
+
+    function validAdminCreate(uid) {
+      return request.resource.data.keys().hasAll(['uid', 'email', 'name', 'role', 'createdAt'])
+        && request.resource.data.uid == uid
+        && request.resource.data.role == 'admin'
+        && request.resource.data.email is string
+        && request.resource.data.name is string;
+    }
+
+    // Public bootstrap flag — readable so the app knows if first admin exists.
+    match /config/{docId} {
+      allow read: if true;
+      allow create, update: if signedIn()
+        && docId == 'bootstrap'
+        && bootstrapOpen()
+        && request.resource.data.adminCreated == true;
+      allow delete: if false;
+    }
+
+    // Admin role documents
+    match /admins/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      // First admin (self + bootstrap) OR an existing admin adding another.
+      allow create: if signedIn()
+        && validAdminCreate(uid)
+        && (
+          (request.auth.uid == uid && bootstrapOpen())
+          || isAdmin()
+        );
+      allow update, delete: if isAdmin();
+    }
+
+    match /students/{studentId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    match /registrations/{regId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /certificates/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /reviews/{id} {
+      allow read: if resource.data.status == 'approved' || isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /analytics/{id} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /notificationOutbox/{id} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
