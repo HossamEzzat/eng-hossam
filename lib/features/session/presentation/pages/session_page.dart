@@ -173,6 +173,8 @@ class _TicketCardState extends State<_TicketCard> {
                 ),
               ),
               const SizedBox(height: 16),
+              _InfoRow(Icons.calendar_month_outlined, s.dateLabel(isAr)),
+              const SizedBox(height: 10),
               _InfoRow(Icons.schedule_outlined, s.timeLabel(isAr)),
               const SizedBox(height: 10),
               _InfoRow(Icons.place_outlined, s.address(isAr)),

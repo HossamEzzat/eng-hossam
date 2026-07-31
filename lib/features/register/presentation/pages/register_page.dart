@@ -136,7 +136,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '📍 ${session.cityLabel(isAr)} · 🏫 ${session.academy(isAr)}',
+                    '📍 ${session.cityLabel(isAr)} · 📅 ${session.dateLabel(isAr)}',
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSoft,
+                      height: 1.45,
+                    ),
+                  ),
+                  Text(
+                    '🏫 ${session.academy(isAr)}',
                     style: context.textTheme.bodyMedium?.copyWith(
                       color: AppColors.textSoft,
                       height: 1.45,

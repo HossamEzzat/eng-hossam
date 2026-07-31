@@ -90,8 +90,8 @@ class OpeningSession {
   int get availableSeats => remainingSeats;
 
   String displayLabel(bool isAr) => isAr
-      ? '$courseAr · $academyAr · السويس · $timeLabelAr'
-      : '$courseEn · $academyEn · Suez · $timeLabelEn';
+      ? '$courseAr · $academyAr · السويس · $dateLabelAr · $timeLabelAr'
+      : '$courseEn · $academyEn · Suez · $dateLabelEn · $timeLabelEn';
 
   OpeningSession copyWith({
     String? titleAr,
@@ -178,10 +178,10 @@ class OpeningSession {
       branch: SessionBranch.glc,
       gradeBand: SessionGradeBand.both,
       date: DateTime.parse(
-        map['date'] as String? ?? DateTime(2026, 9, 1, 18).toIso8601String(),
+        map['date'] as String? ?? DateTime(2026, 8, 5, 18).toIso8601String(),
       ),
-      dateLabelAr: map['dateLabelAr'] as String? ?? 'السويس',
-      dateLabelEn: map['dateLabelEn'] as String? ?? 'Suez',
+      dateLabelAr: map['dateLabelAr'] as String? ?? '٥ أغسطس ٢٠٢٦',
+      dateLabelEn: map['dateLabelEn'] as String? ?? '5 August 2026',
       timeLabelAr: map['timeLabelAr'] as String? ?? 'من ٦:٠٠ مساءً إلى ٨:٠٠ مساءً',
       timeLabelEn: map['timeLabelEn'] as String? ?? '6:00 PM – 8:00 PM',
       totalSeats: map['totalSeats'] as int? ?? 80,
@@ -229,9 +229,9 @@ class SessionCatalog {
       titleEn: 'Programming Course Opening Session',
       branch: SessionBranch.glc,
       gradeBand: SessionGradeBand.both,
-      date: DateTime(2026, 9, 1, 18, 0),
-      dateLabelAr: 'السويس',
-      dateLabelEn: 'Suez',
+      date: DateTime(2026, 8, 5, 18, 0),
+      dateLabelAr: '٥ / ٨ / ٢٠٢٦',
+      dateLabelEn: '5 / 8 / 2026',
       timeLabelAr: 'من ٦:٠٠ مساءً إلى ٨:٠٠ مساءً',
       timeLabelEn: '6:00 PM – 8:00 PM',
       totalSeats: 80,

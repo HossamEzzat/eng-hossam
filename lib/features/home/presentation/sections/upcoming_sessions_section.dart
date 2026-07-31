@@ -204,6 +204,11 @@ class SessionTicketCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 10),
                             _TicketMeta(
+                              icon: Icons.calendar_month_rounded,
+                              label: '📅 ${session.dateLabel(isAr)}',
+                            ),
+                            const SizedBox(height: 10),
+                            _TicketMeta(
                               icon: Icons.school_rounded,
                               label: '🏫 ${session.academy(isAr)}',
                             ),
