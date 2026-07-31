@@ -1,16 +1,27 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lumina/core/constants/app_constants.dart';
 import 'package:lumina/data/models/admin_models.dart';
 import 'package:lumina/data/models/registration.dart';
 import 'package:lumina/data/repositories/providers.dart';
-import 'package:lumina/features/admin/data/admin_auth_service.dart';
+import 'package:lumina/features/admin/auth/admin_auth_controller.dart';
+import 'package:lumina/features/admin/auth/admin_auth_repository.dart';
+import 'package:lumina/features/admin/auth/firebase_admin_auth_repository.dart';
+import 'package:lumina/features/admin/auth/local_dev_admin_auth_repository.dart';
 import 'package:lumina/features/admin/data/admin_export_service.dart';
 import 'package:lumina/features/admin/data/notification_outbox.dart';
 
-final adminAuthProvider =
-    ChangeNotifierProvider<AdminAuthService>((ref) {
-  final auth = AdminAuthService();
-  auth.restore();
-  return auth;
+/// Swap this provider to change auth backend without touching UI.
+final adminAuthRepositoryProvider = Provider<LoginRepository>((ref) {
+  if (AppConstants.useFirebase) {
+    return FirebaseAdminAuthRepository();
+  }
+  return LocalDevAdminAuthRepository();
+});
+
+final adminAuthProvider = ChangeNotifierProvider<AuthService>((ref) {
+  final service = AuthService(ref.watch(adminAuthRepositoryProvider));
+  service.restore();
+  return service;
 });
 
 final studentFiltersProvider =

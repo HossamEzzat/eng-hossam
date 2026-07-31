@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lumina/animations/page_transitions.dart';
+import 'package:lumina/core/constants/app_constants.dart';
 import 'package:lumina/features/about/presentation/pages/about_page.dart';
 import 'package:lumina/features/admin/presentation/pages/admin_certificate_preview_page.dart';
 import 'package:lumina/features/admin/presentation/pages/admin_dashboard_page.dart';
@@ -37,27 +38,27 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isAdminRoute =
           path == '/admin' || path.startsWith('/admin/');
 
-      // Public site never blocked by admin auth.
       if (!isAdminRoute) return null;
-      if (auth.isRestoring) return null;
 
-      // Students / random visitors cannot reach admin pages without auth.
-      if (auth.needsSetup && !settingUp && !loggingIn) {
-        return '/admin/setup';
+      // Never expose admin UI while session is loading.
+      if (auth.isRestoring) {
+        return loggingIn ? null : '/admin/login';
       }
 
-      if (!auth.isAuthenticated && !loggingIn && !settingUp) {
+      // Setup is Firebase-only bootstrap; local/dev uses login only.
+      if (settingUp && !AppConstants.useFirebase) {
         return '/admin/login';
       }
 
-      // Authenticated admins skip login/setup.
-      if (auth.isAuthenticated && (loggingIn || settingUp)) {
-        return '/admin';
+      if (!auth.isAuthenticated) {
+        if (loggingIn) return null;
+        if (settingUp && AppConstants.useFirebase) return null;
+        return '/admin/login';
       }
 
-      // Non-admin who somehow authenticated is bounced home.
-      if (auth.accessDenied) {
-        return '/';
+      // Authenticated admins leave the login screen.
+      if (loggingIn || settingUp) {
+        return '/admin';
       }
 
       return null;

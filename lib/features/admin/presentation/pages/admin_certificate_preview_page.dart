@@ -7,6 +7,7 @@ import 'package:lumina/data/services/certificate_pdf_service.dart';
 import 'package:lumina/features/admin/presentation/widgets/admin_ui.dart';
 import 'package:lumina/features/admin/presentation/widgets/certificate_preview_card.dart';
 import 'package:lumina/theme/app_colors.dart';
+import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 
 /// Admin-only page to review the certificate design before publishing.
@@ -54,7 +55,11 @@ class _AdminCertificatePreviewPageState
     setState(() => _downloading = true);
     try {
       final bytes = await CertificatePdfService().build(reg);
-      await Printing.layoutPdf(onLayout: (_) async => bytes);
+      await Printing.layoutPdf(
+        onLayout: (_) async => bytes,
+        name: 'certificate_${reg.registrationId}.pdf',
+        format: PdfPageFormat.a4.landscape,
+      );
       if (mounted) adminSnack(context, 'Certificate PDF ready');
     } catch (e) {
       if (mounted) adminSnack(context, 'PDF failed: $e');

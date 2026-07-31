@@ -31,8 +31,8 @@ class AppConstants {
       'بدأوا رحلتهم البرمجية معايا. الدورة دي مصمّمة خصيصًا لطلاب أولى وتانية ثانوي '
       'في نظام البكالوريا المصرية الجديدة.';
 
-  static const String adminEmail = 'admin@enghossam.app';
-  static const String adminPassword = 'admin123';
+  /// When true, [FirebaseAdminAuthRepository] is used instead of local config.
+  /// Temporary email/password live only in `lib/core/config/admin_auth_config.dart`.
   static const bool useFirebase = false;
 
   static const double maxContentWidth = 1120;

@@ -20,6 +20,16 @@ class AdminShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(adminAuthProvider);
+
+    // Defense in depth: never render admin chrome without a session.
+    if (auth.isRestoring || !auth.isAuthenticated) {
+      return const Scaffold(
+        backgroundColor: AppColors.bg,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final path = GoRouterState.of(context).uri.path;
     final wide = MediaQuery.sizeOf(context).width >= 1000;
     final selected = _nav.indexWhere((e) {
@@ -42,7 +52,7 @@ class AdminShell extends ConsumerWidget {
                   },
                   onLogout: () async {
                     await ref.read(adminAuthProvider).logout();
-                    if (context.mounted) context.go('/admin/login');
+                    if (context.mounted) context.go('/');
                   },
                 ),
               ),
@@ -59,7 +69,7 @@ class AdminShell extends ConsumerWidget {
                   onSelect: (i) => context.go(_nav[i].$3),
                   onLogout: () async {
                     await ref.read(adminAuthProvider).logout();
-                    if (context.mounted) context.go('/admin/login');
+                    if (context.mounted) context.go('/');
                   },
                 ),
               ),

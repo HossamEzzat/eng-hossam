@@ -1,286 +1,374 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:intl/intl.dart';
-import 'package:lumina/core/constants/app_constants.dart';
-import 'package:lumina/data/models/opening_session.dart';
 import 'package:lumina/data/models/registration.dart';
+import 'package:lumina/data/services/certificate_content.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+/// Builds a premium A4-landscape certificate PDF suitable for print.
+///
+/// On-screen preview renders this same document so download === preview.
 class CertificatePdfService {
   String certificateNumber(Registration registration) =>
-      'CERT-${registration.registrationId.replaceFirst('REG-', '')}';
+      CertificateContent.fromRegistration(registration).certificateNumber;
 
   String verificationUrl(Registration registration) =>
-      'https://eng-hossam.web.app/verify/${certificateNumber(registration)}';
+      CertificateContent.fromRegistration(registration).verificationUrl;
 
   Future<Uint8List> build(Registration registration) async {
-    final doc = pw.Document();
-    final certNo = certificateNumber(registration);
-    final verifyUrl = verificationUrl(registration);
-    final session = SessionCatalog.byId(registration.sessionId);
-    final attendanceDate = registration.attendanceDate ?? registration.createdAt;
-    final dateStr = DateFormat.yMMMMd().format(attendanceDate);
+    final content = CertificateContent.fromRegistration(registration);
+    final doc = pw.Document(
+      title: '${content.title} — ${content.studentName}',
+      author: content.brandLine,
+    );
 
-    pw.Font? arabic;
-    pw.Font? arabicBold;
-    try {
-      arabic = await PdfGoogleFonts.notoSansArabicRegular();
-      arabicBold = await PdfGoogleFonts.notoSansArabicBold();
-    } catch (_) {}
+    final cinzel = await PdfGoogleFonts.cinzelBold();
+    final cinzelReg = await PdfGoogleFonts.cinzelRegular();
+    final display = await PdfGoogleFonts.cormorantGaramondBold();
+    final displayReg = await PdfGoogleFonts.cormorantGaramondRegular();
+    final body = await PdfGoogleFonts.sourceSans3Regular();
+    final bodySemi = await PdfGoogleFonts.sourceSans3SemiBold();
+    final bodyBold = await PdfGoogleFonts.sourceSans3Bold();
+    final script = await PdfGoogleFonts.greatVibesRegular();
+    final arabic = await PdfGoogleFonts.notoSansArabicRegular();
+    final arabicBold = await PdfGoogleFonts.notoSansArabicBold();
 
-    final primary = PdfColor.fromHex('#3B82F6');
-    final secondary = PdfColor.fromHex('#06B6D4');
-    final accent = PdfColor.fromHex('#F59E0B');
-    final dark = PdfColor.fromHex('#0B1120');
-    final muted = PdfColor.fromHex('#64748B');
-    final cream = PdfColor.fromHex('#F8FAFC');
-
-    final baseFont = arabic;
-    final boldFont = arabicBold;
-    final useArabic = baseFont != null && boldFont != null;
-
-    final baseStyle = useArabic
-        ? pw.TextStyle(font: baseFont, fontFallback: [baseFont])
-        : const pw.TextStyle();
-    final boldStyle = useArabic
-        ? pw.TextStyle(font: boldFont, fontFallback: [boldFont])
-        : pw.TextStyle(fontWeight: pw.FontWeight.bold);
+    final fallback = [arabic, arabicBold];
 
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4.landscape,
-        margin: const pw.EdgeInsets.all(28),
-        theme: useArabic
-            ? pw.ThemeData.withFont(base: baseFont, bold: boldFont)
-            : null,
-        textDirection:
-            useArabic ? pw.TextDirection.rtl : pw.TextDirection.ltr,
+        margin: pw.EdgeInsets.zero,
         build: (context) {
           return pw.Container(
-            decoration: pw.BoxDecoration(
-              color: cream,
-              border: pw.Border.all(color: primary, width: 3),
-              borderRadius: pw.BorderRadius.circular(8),
-            ),
-            child: pw.Stack(
-              children: [
-                // Inner decorative border
-                pw.Positioned.fill(
-                  child: pw.Container(
-                    margin: const pw.EdgeInsets.all(10),
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border.all(
-                        color: PdfColor.fromHex('#67E8F9'),
-                        width: 1.2,
-                      ),
-                    ),
+            color: CertificatePalette.paperEdge,
+            padding: const pw.EdgeInsets.all(18),
+            child: pw.Container(
+              decoration: pw.BoxDecoration(
+                color: CertificatePalette.paper,
+                border: pw.Border.all(
+                  color: CertificatePalette.navy,
+                  width: 2.4,
+                ),
+              ),
+              child: pw.Container(
+                margin: const pw.EdgeInsets.all(8),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(
+                    color: CertificatePalette.gold,
+                    width: 1.1,
                   ),
                 ),
-                // Corner accents
-                pw.Positioned(
-                  left: 18,
-                  top: 18,
-                  child: _corner(primary, secondary),
-                ),
-                pw.Positioned(
-                  right: 18,
-                  top: 18,
-                  child: pw.Transform.rotate(
-                    angle: 1.5708,
-                    child: _corner(primary, secondary),
-                  ),
-                ),
-                pw.Positioned(
-                  left: 18,
-                  bottom: 18,
-                  child: pw.Transform.rotate(
-                    angle: -1.5708,
-                    child: _corner(primary, secondary),
-                  ),
-                ),
-                pw.Positioned(
-                  right: 18,
-                  bottom: 18,
-                  child: pw.Transform.rotate(
-                    angle: 3.1416,
-                    child: _corner(primary, secondary),
-                  ),
-                ),
-                pw.Padding(
-                  padding: const pw.EdgeInsets.fromLTRB(48, 36, 48, 28),
-                  child: pw.Column(
-                    children: [
-                      pw.Text(
-                        AppConstants.instructorNameEn.toUpperCase(),
-                        style: boldStyle.copyWith(
-                          color: primary,
-                          fontSize: 12,
-                          letterSpacing: 3,
-                        ),
-                      ),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        'Programming with Eng. Hossam',
-                        style: baseStyle.copyWith(
-                          color: muted,
-                          fontSize: 10,
-                        ),
-                      ),
-                      pw.SizedBox(height: 14),
-                      pw.Container(
-                        width: 80,
-                        height: 2,
+                child: pw.Stack(
+                  children: [
+                    // Soft paper wash
+                    pw.Positioned.fill(
+                      child: pw.Container(
                         decoration: pw.BoxDecoration(
                           gradient: pw.LinearGradient(
-                            colors: [primary, secondary, accent],
-                          ),
-                        ),
-                      ),
-                      pw.SizedBox(height: 14),
-                      pw.Text(
-                        'Certificate of Attendance',
-                        style: boldStyle.copyWith(
-                          color: dark,
-                          fontSize: 30,
-                        ),
-                      ),
-                      pw.SizedBox(height: 6),
-                      pw.Text(
-                        'شهادة حضور',
-                        style: boldStyle.copyWith(
-                          color: muted,
-                          fontSize: 14,
-                        ),
-                      ),
-                      pw.SizedBox(height: 18),
-                      pw.Text(
-                        'This certifies that',
-                        style: baseStyle.copyWith(color: muted, fontSize: 11),
-                      ),
-                      pw.SizedBox(height: 8),
-                      pw.Text(
-                        registration.fullName,
-                        style: boldStyle.copyWith(
-                          color: dark,
-                          fontSize: 28,
-                        ),
-                      ),
-                      pw.SizedBox(height: 8),
-                      pw.Text(
-                        'has successfully attended the programming session',
-                        style: baseStyle.copyWith(color: muted, fontSize: 11),
-                      ),
-                      pw.SizedBox(height: 10),
-                      pw.Text(
-                        registration.sessionLabel,
-                        style: boldStyle.copyWith(
-                          color: primary,
-                          fontSize: 14,
-                        ),
-                        textAlign: pw.TextAlign.center,
-                      ),
-                      pw.SizedBox(height: 20),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _meta('Registration ID', registration.registrationId,
-                              baseStyle, boldStyle),
-                          _meta(
-                            'Grade',
-                            registration.grade,
-                            baseStyle,
-                            boldStyle,
-                          ),
-                          _meta(
-                            'Branch',
-                            session?.branchLabel(false) ??
-                                registration.sessionLabel,
-                            baseStyle,
-                            boldStyle,
-                          ),
-                          _meta(
-                            'Attendance Date',
-                            dateStr,
-                            baseStyle,
-                            boldStyle,
-                          ),
-                        ],
-                      ),
-                      pw.Spacer(),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: pw.CrossAxisAlignment.end,
-                        children: [
-                          pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              pw.Container(
-                                width: 150,
-                                height: 1.2,
-                                color: muted,
-                              ),
-                              pw.SizedBox(height: 6),
-                              pw.Text(
-                                AppConstants.instructorNameEn,
-                                style: boldStyle.copyWith(
-                                  color: dark,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              pw.Text(
-                                'Instructor Signature',
-                                style: baseStyle.copyWith(
-                                  color: muted,
-                                  fontSize: 8,
-                                ),
-                              ),
+                            begin: pw.Alignment.topLeft,
+                            end: pw.Alignment.bottomRight,
+                            colors: [
+                              CertificatePalette.paper,
+                              CertificatePalette.paperEdge,
+                              CertificatePalette.paper,
                             ],
                           ),
-                          pw.Column(
+                        ),
+                      ),
+                    ),
+                    // Programming watermark
+                    pw.Center(
+                      child: pw.Opacity(
+                        opacity: 0.045,
+                        child: pw.Text(
+                          '{  }',
+                          style: pw.TextStyle(
+                            font: bodyBold,
+                            fontSize: 220,
+                            color: CertificatePalette.navy,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Subtle geometric accents
+                    pw.Positioned(
+                      left: 36,
+                      top: 36,
+                      child: _cornerOrnament(),
+                    ),
+                    pw.Positioned(
+                      right: 36,
+                      top: 36,
+                      child: pw.Transform.rotate(
+                        angle: math.pi / 2,
+                        child: _cornerOrnament(),
+                      ),
+                    ),
+                    pw.Positioned(
+                      left: 36,
+                      bottom: 36,
+                      child: pw.Transform.rotate(
+                        angle: -math.pi / 2,
+                        child: _cornerOrnament(),
+                      ),
+                    ),
+                    pw.Positioned(
+                      right: 36,
+                      bottom: 36,
+                      child: pw.Transform.rotate(
+                        angle: math.pi,
+                        child: _cornerOrnament(),
+                      ),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.fromLTRB(52, 34, 52, 28),
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                        children: [
+                          _header(
+                            content,
+                            cinzel: cinzel,
+                            cinzelReg: cinzelReg,
+                            body: body,
+                          ),
+                          pw.SizedBox(height: 18),
+                          pw.Center(child: _goldRule()),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            content.title.toUpperCase(),
+                            textAlign: pw.TextAlign.center,
+                            style: pw.TextStyle(
+                              font: cinzel,
+                              fontSize: 28,
+                              letterSpacing: 3.2,
+                              color: CertificatePalette.navy,
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text(
+                            content.titleAr,
+                            textAlign: pw.TextAlign.center,
+                            style: pw.TextStyle(
+                              font: arabicBold,
+                              fontSize: 13,
+                              color: CertificatePalette.muted,
+                            ),
+                            textDirection: pw.TextDirection.rtl,
+                          ),
+                          pw.SizedBox(height: 18),
+                          pw.Text(
+                            'This is to certify that',
+                            textAlign: pw.TextAlign.center,
+                            style: pw.TextStyle(
+                              font: body,
+                              fontSize: 11,
+                              color: CertificatePalette.muted,
+                              fontStyle: pw.FontStyle.italic,
+                            ),
+                          ),
+                          pw.SizedBox(height: 10),
+                          pw.Text(
+                            content.studentName,
+                            textAlign: pw.TextAlign.center,
+                            style: pw.TextStyle(
+                              font: display,
+                              fontFallback: fallback,
+                              fontSize: 34,
+                              color: CertificatePalette.ink,
+                            ),
+                          ),
+                          pw.SizedBox(height: 6),
+                          pw.Center(
+                            child: pw.Container(
+                              width: 220,
+                              height: 1.2,
+                              color: CertificatePalette.gold,
+                            ),
+                          ),
+                          pw.SizedBox(height: 12),
+                          pw.Text(
+                            'has successfully attended the programming session',
+                            textAlign: pw.TextAlign.center,
+                            style: pw.TextStyle(
+                              font: body,
+                              fontSize: 11,
+                              color: CertificatePalette.muted,
+                            ),
+                          ),
+                          pw.SizedBox(height: 8),
+                          pw.Text(
+                            content.sessionName,
+                            textAlign: pw.TextAlign.center,
+                            style: pw.TextStyle(
+                              font: displayReg,
+                              fontFallback: fallback,
+                              fontSize: 15,
+                              color: CertificatePalette.navySoft,
+                            ),
+                          ),
+                          pw.SizedBox(height: 20),
+                          pw.Row(
+                            mainAxisAlignment:
+                                pw.MainAxisAlignment.spaceEvenly,
                             children: [
-                              pw.Text(
+                              _metaBlock(
+                                'Registration ID',
+                                content.registrationId,
+                                body,
+                                bodySemi,
+                              ),
+                              _metaBlock(
                                 'Certificate No.',
-                                style: baseStyle.copyWith(
-                                  color: muted,
-                                  fontSize: 8,
+                                content.certificateNumber,
+                                body,
+                                bodySemi,
+                              ),
+                              _metaBlock(
+                                'Branch',
+                                content.branch,
+                                body,
+                                bodySemi,
+                              ),
+                              _metaBlock(
+                                'Grade',
+                                content.grade,
+                                body,
+                                bodySemi,
+                                fallback: fallback,
+                              ),
+                              _metaBlock(
+                                'Attendance Date',
+                                content.attendanceDateLabel,
+                                body,
+                                bodySemi,
+                              ),
+                            ],
+                          ),
+                          pw.Spacer(),
+                          pw.Row(
+                            crossAxisAlignment: pw.CrossAxisAlignment.end,
+                            children: [
+                              pw.Expanded(
+                                flex: 3,
+                                child: _signatureBlock(
+                                  content,
+                                  script: script,
+                                  body: body,
+                                  bodySemi: bodySemi,
                                 ),
                               ),
-                              pw.SizedBox(height: 2),
-                              pw.Text(
-                                certNo,
-                                style: boldStyle.copyWith(
-                                  color: dark,
-                                  fontSize: 11,
+                              pw.Expanded(
+                                flex: 2,
+                                child: pw.Column(
+                                  children: [
+                                    pw.Text(
+                                      'Issue Date',
+                                      style: pw.TextStyle(
+                                        font: body,
+                                        fontSize: 8,
+                                        color: CertificatePalette.muted,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    pw.SizedBox(height: 4),
+                                    pw.Text(
+                                      content.issueDateLabel,
+                                      style: pw.TextStyle(
+                                        font: bodySemi,
+                                        fontSize: 11,
+                                        color: CertificatePalette.ink,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              pw.Expanded(
+                                flex: 2,
+                                child: pw.Column(
+                                  children: [
+                                    pw.Container(
+                                      padding: const pw.EdgeInsets.all(6),
+                                      decoration: pw.BoxDecoration(
+                                        color: CertificatePalette.white,
+                                        border: pw.Border.all(
+                                          color: CertificatePalette.line,
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: pw.BarcodeWidget(
+                                        barcode: pw.Barcode.qrCode(),
+                                        data: content.verificationUrl,
+                                        width: 68,
+                                        height: 68,
+                                        color: CertificatePalette.navy,
+                                      ),
+                                    ),
+                                    pw.SizedBox(height: 4),
+                                    pw.Text(
+                                      'Scan to verify',
+                                      style: pw.TextStyle(
+                                        font: body,
+                                        fontSize: 7.5,
+                                        color: CertificatePalette.muted,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                          pw.Column(
-                            children: [
-                              pw.BarcodeWidget(
-                                barcode: pw.Barcode.qrCode(),
-                                data: verifyUrl,
-                                width: 64,
-                                height: 64,
-                              ),
-                              pw.SizedBox(height: 4),
-                              pw.Text(
-                                'Verify',
-                                style: baseStyle.copyWith(
-                                  color: muted,
-                                  fontSize: 7,
+                          pw.SizedBox(height: 14),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.only(top: 10),
+                            decoration: pw.BoxDecoration(
+                              border: pw.Border(
+                                top: pw.BorderSide(
+                                  color: CertificatePalette.line,
+                                  width: 0.8,
                                 ),
                               ),
-                            ],
+                            ),
+                            child: pw.Row(
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
+                              children: [
+                                pw.Text(
+                                  content.brandLine.toUpperCase(),
+                                  style: pw.TextStyle(
+                                    font: cinzelReg,
+                                    fontSize: 7.5,
+                                    letterSpacing: 1.4,
+                                    color: CertificatePalette.navySoft,
+                                  ),
+                                ),
+                                pw.Text(
+                                  'Official training certificate · Print on A4',
+                                  style: pw.TextStyle(
+                                    font: body,
+                                    fontSize: 7.5,
+                                    color: CertificatePalette.muted,
+                                  ),
+                                ),
+                                pw.Text(
+                                  content.certificateNumber,
+                                  style: pw.TextStyle(
+                                    font: bodySemi,
+                                    fontSize: 7.5,
+                                    color: CertificatePalette.navySoft,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },
@@ -290,43 +378,215 @@ class CertificatePdfService {
     return doc.save();
   }
 
-  pw.Widget _corner(PdfColor a, PdfColor b) {
+  pw.Widget _header(
+    CertificateContent content, {
+    required pw.Font cinzel,
+    required pw.Font cinzelReg,
+    required pw.Font body,
+  }) {
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
+      children: [
+        pw.Expanded(
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                content.brandLine.toUpperCase(),
+                style: pw.TextStyle(
+                  font: cinzel,
+                  fontSize: 11,
+                  letterSpacing: 2.4,
+                  color: CertificatePalette.navy,
+                ),
+              ),
+              pw.SizedBox(height: 3),
+              pw.Text(
+                'Professional Programming Training',
+                style: pw.TextStyle(
+                  font: body,
+                  fontSize: 9,
+                  color: CertificatePalette.muted,
+                ),
+              ),
+            ],
+          ),
+        ),
+        _seal(cinzelReg),
+      ],
+    );
+  }
+
+  pw.Widget _seal(pw.Font font) {
     return pw.Container(
-      width: 28,
-      height: 28,
+      width: 54,
+      height: 54,
       decoration: pw.BoxDecoration(
-        border: pw.Border(
-          top: pw.BorderSide(color: a, width: 2.5),
-          left: pw.BorderSide(color: b, width: 2.5),
+        shape: pw.BoxShape.circle,
+        border: pw.Border.all(color: CertificatePalette.gold, width: 1.6),
+      ),
+      child: pw.Container(
+        margin: const pw.EdgeInsets.all(3),
+        decoration: pw.BoxDecoration(
+          shape: pw.BoxShape.circle,
+          border: pw.Border.all(color: CertificatePalette.navy, width: 0.8),
+        ),
+        child: pw.Center(
+          child: pw.Column(
+            mainAxisAlignment: pw.MainAxisAlignment.center,
+            children: [
+              pw.Text(
+                'EH',
+                style: pw.TextStyle(
+                  font: font,
+                  fontSize: 13,
+                  color: CertificatePalette.navy,
+                  letterSpacing: 1,
+                ),
+              ),
+              pw.Text(
+                'CERT',
+                style: pw.TextStyle(
+                  font: font,
+                  fontSize: 6,
+                  color: CertificatePalette.gold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  pw.Widget _meta(
+  pw.Widget _goldRule() {
+    return pw.Row(
+      mainAxisSize: pw.MainAxisSize.min,
+      children: [
+        pw.Container(
+          width: 56,
+          height: 1,
+          color: CertificatePalette.gold,
+        ),
+        pw.SizedBox(width: 8),
+        pw.Transform.rotate(
+          angle: math.pi / 4,
+          child: pw.Container(
+            width: 7,
+            height: 7,
+            color: CertificatePalette.gold,
+          ),
+        ),
+        pw.SizedBox(width: 8),
+        pw.Container(
+          width: 56,
+          height: 1,
+          color: CertificatePalette.gold,
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _cornerOrnament() {
+    return pw.Container(
+      width: 26,
+      height: 26,
+      decoration: pw.BoxDecoration(
+        border: pw.Border(
+          top: pw.BorderSide(color: CertificatePalette.gold, width: 1.8),
+          left: pw.BorderSide(color: CertificatePalette.navy, width: 1.8),
+        ),
+      ),
+    );
+  }
+
+  pw.Widget _metaBlock(
     String label,
     String value,
-    pw.TextStyle base,
-    pw.TextStyle bold,
-  ) {
+    pw.Font body,
+    pw.Font bold, {
+    List<pw.Font>? fallback,
+  }) {
+    return pw.ConstrainedBox(
+      constraints: const pw.BoxConstraints(maxWidth: 130),
+      child: pw.Column(
+        children: [
+          pw.Text(
+            label.toUpperCase(),
+            textAlign: pw.TextAlign.center,
+            style: pw.TextStyle(
+              font: body,
+              fontSize: 7,
+              letterSpacing: 0.7,
+              color: CertificatePalette.muted,
+            ),
+          ),
+          pw.SizedBox(height: 4),
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: pw.BoxDecoration(
+              border: pw.Border(
+                bottom: pw.BorderSide(
+                  color: CertificatePalette.line,
+                  width: 0.7,
+                ),
+              ),
+            ),
+            child: pw.Text(
+              value,
+              textAlign: pw.TextAlign.center,
+              style: pw.TextStyle(
+                font: bold,
+                fontFallback: fallback ?? <pw.Font>[],
+                fontSize: 9.5,
+                color: CertificatePalette.ink,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _signatureBlock(
+    CertificateContent content, {
+    required pw.Font script,
+    required pw.Font body,
+    required pw.Font bodySemi,
+  }) {
     return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          label.toUpperCase(),
-          style: base.copyWith(
-            color: PdfColor.fromHex('#94A3B8'),
-            fontSize: 7,
-            letterSpacing: 0.8,
+          content.instructorName,
+          style: pw.TextStyle(
+            font: script,
+            fontSize: 26,
+            color: CertificatePalette.navy,
           ),
+        ),
+        pw.Container(
+          width: 150,
+          height: 1,
+          color: CertificatePalette.navySoft,
         ),
         pw.SizedBox(height: 4),
         pw.Text(
-          value,
-          style: bold.copyWith(
-            color: PdfColor.fromHex('#0B1120'),
+          content.instructorName,
+          style: pw.TextStyle(
+            font: bodySemi,
             fontSize: 10,
+            color: CertificatePalette.ink,
           ),
-          textAlign: pw.TextAlign.center,
+        ),
+        pw.Text(
+          'Instructor Signature',
+          style: pw.TextStyle(
+            font: body,
+            fontSize: 8,
+            color: CertificatePalette.muted,
+          ),
         ),
       ],
     );
