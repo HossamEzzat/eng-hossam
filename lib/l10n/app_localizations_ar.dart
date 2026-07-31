@@ -64,7 +64,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get heroSubtitle =>
-      'تعلّم البرمجة بطريقة عملية ومبسّطة، من خلال منهج مصمّم خصيصًا لطلاب الصف الأول والثاني الثانوي بنظام البكالوريا المصرية.';
+      'تعلّم البرمجة بطريقة عملية ومبسّطة — جلسة افتتاح واحدة في أكاديمية GLC بالسويس لطلاب الصف الأول والثاني الثانوي بنظام البكالوريا المصرية.';
 
   @override
   String get statStudents => 'طالب';
@@ -146,10 +146,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sessionsSubtitle =>
-      'جلسات السويس — فرع السويس وفرع السلام. المقاعد محدودة.';
+      'جلسة افتتاح رسمية واحدة في أكاديمية GLC بالسويس — من ٦:٠٠ مساءً إلى ٨:٠٠ مساءً. المقاعد محدودة.';
 
   @override
-  String get sessionsTitle => 'كن جزءًا من أول دفعة';
+  String get sessionsTitle => 'جلسة افتتاح دورة البرمجة';
 
   @override
   String get registrationOpen => 'التسجيل مفتوح';
@@ -158,7 +158,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seatsRemaining => 'مقاعد متبقية';
 
   @override
-  String get reserveSeat => 'احجز مقعدك';
+  String get reserveSeat => 'احجز مكانك الآن';
 
   @override
   String get sessionTitle => 'الجلسة الافتتاحية في البرمجة';
@@ -299,10 +299,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get citySuez => 'السويس';
 
   @override
-  String get branchSuez => 'فرع السويس';
+  String get branchSuez => 'أكاديمية GLC';
 
   @override
-  String get branchAlSalam => 'فرع السلام';
+  String get branchAlSalam => 'أكاديمية GLC';
 
   @override
   String get sessionRegionSuez => 'السويس';

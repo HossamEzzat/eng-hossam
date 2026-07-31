@@ -26,17 +26,16 @@ class _AdminCertificatePreviewPageState
 
   Registration _sample() {
     final now = DateTime.now();
-    final session = SessionCatalog.upcoming.first;
+    final session = SessionCatalog.official;
     return Registration(
       id: 'preview',
       registrationId: 'REG-2026-PREVIEW',
       fullName: 'أحمد محمد علي',
       mobile: '01000000000',
       schoolName: 'مدرسة السويس الثانوية',
-      grade: session.gradeLabel(true),
+      grade: 'الصف الثاني الثانوي',
       sessionId: session.id,
-      sessionLabel:
-          '${session.gradeLabel(true)} · ${session.branchLabel(true)} · ${session.timeLabelAr}',
+      sessionLabel: session.displayLabel(true),
       createdAt: now.subtract(const Duration(days: 3)),
       city: 'suez',
       attendanceConfirmed: true,

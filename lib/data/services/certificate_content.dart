@@ -20,6 +20,8 @@ class CertificateContent {
     required this.issueDateLabel,
     required this.instructorName,
     required this.verificationUrl,
+    required this.venueLine,
+    required this.timeLine,
   });
 
   final String brandLine;
@@ -35,9 +37,12 @@ class CertificateContent {
   final String issueDateLabel;
   final String instructorName;
   final String verificationUrl;
+  final String venueLine;
+  final String timeLine;
 
   static CertificateContent fromRegistration(Registration registration) {
-    final session = SessionCatalog.byId(registration.sessionId);
+    final session =
+        SessionCatalog.byId(registration.sessionId) ?? SessionCatalog.official;
     final attendance =
         registration.attendanceDate ?? registration.createdAt;
     final issued = registration.certificateIssuedAt ?? DateTime.now();
@@ -51,12 +56,14 @@ class CertificateContent {
       studentName: registration.fullName,
       registrationId: registration.registrationId,
       certificateNumber: certNo,
-      sessionName: session?.titleEn ?? registration.sessionLabel,
-      branch: session?.branchLabel(false) ?? 'Suez',
+      sessionName: session.courseEn,
+      branch: '${session.academyEn} · ${session.cityLabel(false)}',
       grade: registration.grade,
       attendanceDateLabel: DateFormat.yMMMMd().format(attendance),
       issueDateLabel: DateFormat.yMMMMd().format(issued),
       instructorName: AppConstants.instructorNameEn,
+      venueLine: session.venueEn,
+      timeLine: session.timeLabelEn,
       verificationUrl:
           'https://hossamezzat.github.io/eng-hossam/verify/$certNo',
     );

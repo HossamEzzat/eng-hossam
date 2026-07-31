@@ -19,7 +19,9 @@ class UpcomingSessionsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(sessionStoreProvider);
-    final sessions = store.sessions;
+    final session = store.sessions.isNotEmpty
+        ? store.sessions.first
+        : SessionCatalog.official;
     final wide = Responsive.isWide(context);
     final l10n = context.l10n;
 
@@ -55,37 +57,11 @@ class UpcomingSessionsSection extends ConsumerWidget {
                   subtitle: l10n.sessionsSubtitle,
                 ),
                 const SizedBox(height: 48),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final gap = 24.0;
-                    final stack = constraints.maxWidth < 900;
-                    final cols = stack
-                        ? 1
-                        : constraints.maxWidth < 1200
-                            ? 2
-                            : 3;
-                    final cardWidth = stack
-                        ? constraints.maxWidth
-                        : (constraints.maxWidth - gap * (cols - 1)) / cols;
-
-                    return Wrap(
-                      spacing: gap,
-                      runSpacing: gap,
-                      children: [
-                        for (var i = 0; i < sessions.length; i++)
-                          SizedBox(
-                            width: cardWidth,
-                            child: FadeInView(
-                              delay: Duration(milliseconds: 100 * i),
-                              slideFrom: i.isEven
-                                  ? FadeInDirection.left
-                                  : FadeInDirection.right,
-                              child: SessionTicketCard(session: sessions[i]),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
+                FadeInView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: SessionTicketCard(session: session),
+                  ),
                 ),
               ],
             ),
@@ -96,6 +72,7 @@ class UpcomingSessionsSection extends ConsumerWidget {
   }
 }
 
+/// Premium event-ticket card for the single official opening session.
 class SessionTicketCard extends StatelessWidget {
   const SessionTicketCard({super.key, required this.session});
 
@@ -105,28 +82,22 @@ class SessionTicketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final open = session.remainingSeats > 0;
-    final region = l10n.sessionRegionSuez;
-    final branch = session.branch == SessionBranch.suez
-        ? l10n.branchSuez
-        : l10n.branchAlSalam;
-    final foil = session.branch == SessionBranch.suez
-        ? const [AppColors.primary, AppColors.secondary]
-        : const [AppColors.secondary, AppColors.accent];
+    final open = session.remainingSeats > 0 && session.registrationOpen;
+    const foil = [AppColors.primary, AppColors.secondary];
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: foil.first.withValues(alpha: 0.35),
-            blurRadius: 36,
-            offset: const Offset(0, 18),
+            color: foil.first.withValues(alpha: 0.4),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         child: Stack(
           children: [
             Container(
@@ -134,11 +105,11 @@ class SessionTicketCard extends StatelessWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.card, AppColors.surface],
+                  colors: [Color(0xFF152238), AppColors.card, AppColors.surface],
                 ),
                 border: Border.all(
-                  color: foil.first.withValues(alpha: 0.35),
-                  width: 1.5,
+                  color: foil.first.withValues(alpha: 0.4),
+                  width: 1.6,
                 ),
               ),
               child: IntrinsicHeight(
@@ -146,8 +117,8 @@ class SessionTicketCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Container(
-                      width: 10,
-                      decoration: BoxDecoration(
+                      width: 12,
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -157,7 +128,7 @@ class SessionTicketCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
+                        padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -165,20 +136,20 @@ class SessionTicketCard extends StatelessWidget {
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
+                                    horizontal: 12,
+                                    vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(999),
                                     color: open
                                         ? AppColors.success
-                                            .withValues(alpha: 0.14)
+                                            .withValues(alpha: 0.16)
                                         : AppColors.error
                                             .withValues(alpha: 0.12),
                                     border: Border.all(
                                       color: open
                                           ? AppColors.success
-                                              .withValues(alpha: 0.4)
+                                              .withValues(alpha: 0.45)
                                           : AppColors.error
                                               .withValues(alpha: 0.35),
                                     ),
@@ -197,57 +168,73 @@ class SessionTicketCard extends StatelessWidget {
                                   ),
                                 ),
                                 const Spacer(),
-                                Flexible(
-                                  child: Text(
-                                  region,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                Text(
+                                  isAr
+                                      ? 'جلسة الافتتاح الرسمية'
+                                      : 'Official Opening Session',
                                   style: context.textTheme.labelSmall?.copyWith(
                                     fontWeight: FontWeight.w800,
-                                    color: foil.first.withValues(alpha: 0.7),
+                                    color: foil.first.withValues(alpha: 0.85),
+                                    letterSpacing: 0.4,
                                   ),
-                                ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 20),
                             Text(
-                              session.gradeLabel(isAr),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: context.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                height: 1.3,
+                              session.title(isAr),
+                              style: context.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                height: 1.25,
                                 color: AppColors.text,
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             Text(
-                              branch,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              '${session.course(isAr)} · ${AppConstants.instructorNameAr}',
                               style: context.textTheme.titleMedium?.copyWith(
                                 color: foil.first,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 22),
+                            _TicketMeta(
+                              icon: Icons.location_city_rounded,
+                              label: '📍 ${session.cityLabel(isAr)}',
+                            ),
+                            const SizedBox(height: 10),
+                            _TicketMeta(
+                              icon: Icons.school_rounded,
+                              label: '🏫 ${session.academy(isAr)}',
+                            ),
+                            const SizedBox(height: 10),
                             _TicketMeta(
                               icon: Icons.place_rounded,
-                              label: '📍 ${session.venue(isAr)}',
+                              label: '📌 ${session.address(isAr)}',
                             ),
                             const SizedBox(height: 10),
                             _TicketMeta(
                               icon: Icons.schedule_rounded,
-                              label: '🕐 ${session.timeLabel(isAr)}',
+                              label: '🕕 ${session.timeLabel(isAr)}',
+                            ),
+                            const SizedBox(height: 10),
+                            _TicketMeta(
+                              icon: Icons.person_rounded,
+                              label:
+                                  '👨‍🏫 ${isAr ? AppConstants.instructorNameAr : AppConstants.instructorNameEn}',
+                            ),
+                            const SizedBox(height: 10),
+                            _TicketMeta(
+                              icon: Icons.groups_rounded,
+                              label: '🎯 ${session.audience(isAr)}',
                             ),
                             const SizedBox(height: 10),
                             _TicketMeta(
                               icon: Icons.event_seat_rounded,
                               label:
-                                  '${session.remainingSeats} ${l10n.seatsRemaining} · ${session.totalSeats}',
+                                  '${session.remainingSeats} ${l10n.seatsRemaining}',
                             ),
-                            const SizedBox(height: 22),
+                            const SizedBox(height: 24),
                             CustomPaint(
                               painter: _TicketDashPainter(
                                 color: AppColors.border.withValues(alpha: 0.9),
@@ -259,15 +246,13 @@ class SessionTicketCard extends StatelessWidget {
                               target: session.date,
                               compact: true,
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 22),
                             GradientButton(
                               label: l10n.reserveSeat,
                               icon: Icons.confirmation_number_outlined,
                               expand: true,
                               onPressed: open
-                                  ? () => context.go(
-                                        '/register?session=${session.id}',
-                                      )
+                                  ? () => context.go('/register')
                                   : null,
                             ),
                           ],
@@ -285,7 +270,7 @@ class SessionTicketCard extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: List.generate(
-                  5,
+                  6,
                   (_) => Container(
                     width: 12,
                     height: 12,
@@ -293,7 +278,7 @@ class SessionTicketCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: AppColors.bg,
                       border: Border.all(
-                        color: foil.first.withValues(alpha: 0.25),
+                        color: foil.first.withValues(alpha: 0.28),
                       ),
                     ),
                   ),
@@ -326,6 +311,7 @@ class _TicketMeta extends StatelessWidget {
             style: context.textTheme.bodyMedium?.copyWith(
               height: 1.5,
               color: AppColors.textSoft,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),

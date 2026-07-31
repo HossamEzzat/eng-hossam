@@ -196,10 +196,10 @@ class CertificatePdfService {
                           ),
                           pw.SizedBox(height: 8),
                           PdfArabicText.build(
-                            content.sessionName,
+                            '${content.sessionName} · ${content.venueLine} · ${content.timeLine}',
                             latinFont: displayReg,
                             arabicFont: arabicBold,
-                            fontSize: 15,
+                            fontSize: 14,
                             color: CertificatePalette.navySoft,
                           ),
                           pw.SizedBox(height: 20),
@@ -222,7 +222,7 @@ class CertificatePdfService {
                                 arabicBold: arabicBold,
                               ),
                               _metaBlock(
-                                'Branch',
+                                'Venue',
                                 content.branch,
                                 latinBody: body,
                                 latinBold: bodySemi,

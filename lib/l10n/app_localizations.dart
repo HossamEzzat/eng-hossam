@@ -209,7 +209,7 @@ abstract class AppLocalizations {
   /// No description provided for @heroSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'تعلّم البرمجة بطريقة عملية ومبسّطة، من خلال منهج مصمّم خصيصًا لطلاب الصف الأول والثاني الثانوي بنظام البكالوريا المصرية.'**
+  /// **'تعلّم البرمجة بطريقة عملية ومبسّطة — جلسة افتتاح واحدة في أكاديمية GLC بالسويس لطلاب الصف الأول والثاني الثانوي بنظام البكالوريا المصرية.'**
   String get heroSubtitle;
 
   /// No description provided for @statStudents.
@@ -359,13 +359,13 @@ abstract class AppLocalizations {
   /// No description provided for @sessionsSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'جلسات السويس — فرع السويس وفرع السلام. المقاعد محدودة.'**
+  /// **'جلسة افتتاح رسمية واحدة في أكاديمية GLC بالسويس — من ٦:٠٠ مساءً إلى ٨:٠٠ مساءً. المقاعد محدودة.'**
   String get sessionsSubtitle;
 
   /// No description provided for @sessionsTitle.
   ///
   /// In ar, this message translates to:
-  /// **'كن جزءًا من أول دفعة'**
+  /// **'جلسة افتتاح دورة البرمجة'**
   String get sessionsTitle;
 
   /// No description provided for @registrationOpen.
@@ -383,7 +383,7 @@ abstract class AppLocalizations {
   /// No description provided for @reserveSeat.
   ///
   /// In ar, this message translates to:
-  /// **'احجز مقعدك'**
+  /// **'احجز مكانك الآن'**
   String get reserveSeat;
 
   /// No description provided for @sessionTitle.
@@ -653,13 +653,13 @@ abstract class AppLocalizations {
   /// No description provided for @branchSuez.
   ///
   /// In ar, this message translates to:
-  /// **'فرع السويس'**
+  /// **'أكاديمية GLC'**
   String get branchSuez;
 
   /// No description provided for @branchAlSalam.
   ///
   /// In ar, this message translates to:
-  /// **'فرع السلام'**
+  /// **'أكاديمية GLC'**
   String get branchAlSalam;
 
   /// No description provided for @sessionRegionSuez.

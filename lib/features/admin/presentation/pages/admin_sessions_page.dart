@@ -7,7 +7,6 @@ import 'package:lumina/data/models/opening_session.dart';
 import 'package:lumina/data/repositories/providers.dart';
 import 'package:lumina/features/admin/presentation/widgets/admin_ui.dart';
 import 'package:lumina/theme/app_colors.dart';
-import 'package:uuid/uuid.dart';
 
 class AdminSessionsPage extends ConsumerWidget {
   const AdminSessionsPage({super.key});
@@ -33,7 +32,9 @@ class AdminSessionsPage extends ConsumerWidget {
                   ),
             ),
             FilledButton.icon(
-              onPressed: () => _editSession(context, ref),
+              onPressed: store.sessions.isEmpty
+                  ? () => _editSession(context, ref)
+                  : null,
               icon: const Icon(Icons.add),
               label: const Text('Create session'),
             ),
@@ -118,24 +119,19 @@ class AdminSessionsPage extends ConsumerWidget {
     WidgetRef ref, {
     OpeningSession? existing,
   }) async {
-    final titleAr = TextEditingController(text: existing?.titleAr ?? '');
-    final titleEn = TextEditingController(
-      text: existing?.titleEn ?? 'Programming Session',
-    );
-    final venueAr = TextEditingController(text: existing?.venueAr ?? '');
-    final venueEn = TextEditingController(text: existing?.venueEn ?? '');
-    final seats = TextEditingController(
-      text: '${existing?.totalSeats ?? 40}',
-    );
-    var branch = existing?.branch ?? SessionBranch.suez;
-    var gradeBand = existing?.gradeBand ?? SessionGradeBand.secondSecondary;
-    var date = existing?.date ?? DateTime.now().add(const Duration(days: 7));
-    final timeEn = TextEditingController(
-      text: existing?.timeLabelEn ?? '1:00 PM – 3:00 PM',
-    );
-    final timeAr = TextEditingController(
-      text: existing?.timeLabelAr ?? '١:٠٠ ظهرًا – ٣:٠٠ عصرًا',
-    );
+    final base = existing ?? SessionCatalog.official;
+    final titleAr = TextEditingController(text: base.titleAr);
+    final titleEn = TextEditingController(text: base.titleEn);
+    final venueAr = TextEditingController(text: base.venueAr);
+    final venueEn = TextEditingController(text: base.venueEn);
+    final academyAr = TextEditingController(text: base.academyAr);
+    final academyEn = TextEditingController(text: base.academyEn);
+    final addressAr = TextEditingController(text: base.addressAr);
+    final addressEn = TextEditingController(text: base.addressEn);
+    final seats = TextEditingController(text: '${base.totalSeats}');
+    var date = base.date;
+    final timeEn = TextEditingController(text: base.timeLabelEn);
+    final timeAr = TextEditingController(text: base.timeLabelAr);
 
     final saved = await showDialog<bool>(
       context: context,
@@ -158,6 +154,26 @@ class AdminSessionsPage extends ConsumerWidget {
                     decoration: const InputDecoration(labelText: 'Title (AR)'),
                   ),
                   TextField(
+                    controller: academyEn,
+                    decoration:
+                        const InputDecoration(labelText: 'Academy (EN)'),
+                  ),
+                  TextField(
+                    controller: academyAr,
+                    decoration:
+                        const InputDecoration(labelText: 'Academy (AR)'),
+                  ),
+                  TextField(
+                    controller: addressEn,
+                    decoration:
+                        const InputDecoration(labelText: 'Address (EN)'),
+                  ),
+                  TextField(
+                    controller: addressAr,
+                    decoration:
+                        const InputDecoration(labelText: 'Address (AR)'),
+                  ),
+                  TextField(
                     controller: venueEn,
                     decoration: const InputDecoration(labelText: 'Venue (EN)'),
                   ),
@@ -178,39 +194,6 @@ class AdminSessionsPage extends ConsumerWidget {
                     keyboardType: TextInputType.number,
                     decoration:
                         const InputDecoration(labelText: 'Maximum seats'),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<SessionBranch>(
-                    initialValue: branch,
-                    items: const [
-                      DropdownMenuItem(
-                        value: SessionBranch.suez,
-                        child: Text('Suez Branch'),
-                      ),
-                      DropdownMenuItem(
-                        value: SessionBranch.alSalam,
-                        child: Text('Al Salam Branch'),
-                      ),
-                    ],
-                    onChanged: (v) => setLocal(() => branch = v ?? branch),
-                    decoration: const InputDecoration(labelText: 'Branch'),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<SessionGradeBand>(
-                    initialValue: gradeBand,
-                    items: const [
-                      DropdownMenuItem(
-                        value: SessionGradeBand.firstSecondary,
-                        child: Text('First Secondary'),
-                      ),
-                      DropdownMenuItem(
-                        value: SessionGradeBand.secondSecondary,
-                        child: Text('Second Secondary'),
-                      ),
-                    ],
-                    onChanged: (v) =>
-                        setLocal(() => gradeBand = v ?? gradeBand),
-                    decoration: const InputDecoration(labelText: 'Grade'),
                   ),
                   const SizedBox(height: 8),
                   ListTile(
@@ -254,17 +237,17 @@ class AdminSessionsPage extends ConsumerWidget {
     );
 
     if (saved != true) return;
-    final total = int.tryParse(seats.text) ?? 40;
+    final total = int.tryParse(seats.text) ?? 80;
     final remaining = existing == null
         ? total
         : (total - (existing.totalSeats - existing.remainingSeats))
             .clamp(0, total);
     final session = OpeningSession(
-      id: existing?.id ?? 'ses_${const Uuid().v4().substring(0, 8)}',
+      id: existing?.id ?? SessionCatalog.officialId,
       titleAr: titleAr.text.trim().isEmpty ? titleEn.text : titleAr.text,
       titleEn: titleEn.text.trim(),
-      branch: branch,
-      gradeBand: gradeBand,
+      branch: SessionBranch.glc,
+      gradeBand: SessionGradeBand.both,
       date: date,
       dateLabelAr: 'السويس',
       dateLabelEn: 'Suez',
@@ -272,12 +255,28 @@ class AdminSessionsPage extends ConsumerWidget {
       timeLabelEn: timeEn.text.trim(),
       totalSeats: total,
       remainingSeats: remaining,
-      venueAr: venueAr.text.isEmpty
-          ? (branch == SessionBranch.suez ? 'فرع السويس' : 'فرع السلام')
-          : venueAr.text,
-      venueEn: venueEn.text.isEmpty
-          ? (branch == SessionBranch.suez ? 'Suez Branch' : 'Al Salam Branch')
-          : venueEn.text,
+      venueAr: venueAr.text.trim().isEmpty
+          ? 'أكاديمية GLC · السويس'
+          : venueAr.text.trim(),
+      venueEn: venueEn.text.trim().isEmpty
+          ? 'GLC Academy · Suez'
+          : venueEn.text.trim(),
+      academyAr: academyAr.text.trim().isEmpty
+          ? 'أكاديمية GLC'
+          : academyAr.text.trim(),
+      academyEn: academyEn.text.trim().isEmpty
+          ? 'GLC Academy'
+          : academyEn.text.trim(),
+      addressAr: addressAr.text.trim().isEmpty
+          ? 'شارع الكورنيش القديم - منتجع الواتر واي'
+          : addressAr.text.trim(),
+      addressEn: addressEn.text.trim().isEmpty
+          ? 'Old Corniche Street · Water Way Resort'
+          : addressEn.text.trim(),
+      courseAr: base.courseAr,
+      courseEn: base.courseEn,
+      audienceAr: base.audienceAr,
+      audienceEn: base.audienceEn,
       registrationOpen: existing?.registrationOpen ?? true,
     );
     ref.read(sessionStoreProvider).upsertSession(session);
@@ -337,13 +336,13 @@ class _SessionCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '${session.cityLabel(false)} · ${session.branchLabel(false)} · ${session.timeLabelEn}',
+              '${session.cityLabel(false)} · ${session.academyEn} · ${session.timeLabelEn}',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: AppColors.textSoft),
             ),
             Text(
-              session.venueEn,
+              session.addressEn,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: AppColors.textMuted, fontSize: 12),

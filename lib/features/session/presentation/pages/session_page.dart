@@ -51,7 +51,13 @@ class SessionPage extends ConsumerWidget {
                 const SizedBox(height: 40),
                 FadeInView(
                   delay: 60.ms,
-                  child: _TicketGrid(sessions: sessions),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: _TicketCard(
+                      session: sessions.first,
+                      index: 0,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 64),
                 const FadeInView(child: _WhoFor()),
@@ -67,65 +73,6 @@ class SessionPage extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _TicketGrid extends StatelessWidget {
-  const _TicketGrid({required this.sessions});
-
-  final List<OpeningSession> sessions;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.navSessions,
-          style: context.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: AppColors.text,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          l10n.sessionsSubtitle,
-          style: context.textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSoft,
-          ),
-        ),
-        const SizedBox(height: 24),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final gap = 16.0;
-            final maxW = constraints.maxWidth;
-            // Keep each card wide enough to avoid internal Row overflows.
-            final columns = maxW >= 1080
-                ? 3
-                : maxW >= 680
-                    ? 2
-                    : 1;
-            final cardW = columns == 1
-                ? maxW
-                : (maxW - gap * (columns - 1)) / columns;
-
-            return Wrap(
-              spacing: gap,
-              runSpacing: gap,
-              children: [
-                for (var i = 0; i < sessions.length; i++)
-                  SizedBox(
-                    width: cardW,
-                    child: _TicketCard(session: sessions[i], index: i),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
     );
   }
 }
@@ -149,8 +96,6 @@ class _TicketCardState extends State<_TicketCard> {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final s = widget.session;
     final lowSeats = s.remainingSeats <= 10;
-    final branch =
-        s.branch == SessionBranch.suez ? l10n.branchSuez : l10n.branchAlSalam;
     final pad = Responsive.value(
       context,
       mobile: 16.0,
@@ -187,7 +132,7 @@ class _TicketCardState extends State<_TicketCard> {
                       gradient: AppColors.primaryGradient,
                     ),
                     child: Text(
-                      l10n.sessionRegionSuez,
+                      s.cityLabel(isAr),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.labelMedium?.copyWith(
@@ -197,7 +142,7 @@ class _TicketCardState extends State<_TicketCard> {
                     ),
                   ),
                   Text(
-                    l10n.courseFree,
+                    l10n.registrationOpen,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: context.textTheme.labelLarge?.copyWith(
@@ -209,7 +154,7 @@ class _TicketCardState extends State<_TicketCard> {
               ),
               const SizedBox(height: 18),
               Text(
-                s.gradeLabel(isAr),
+                s.title(isAr),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: context.textTheme.titleLarge?.copyWith(
@@ -219,7 +164,7 @@ class _TicketCardState extends State<_TicketCard> {
               ),
               const SizedBox(height: 6),
               Text(
-                branch,
+                s.academy(isAr),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: context.textTheme.titleMedium?.copyWith(
@@ -230,7 +175,9 @@ class _TicketCardState extends State<_TicketCard> {
               const SizedBox(height: 16),
               _InfoRow(Icons.schedule_outlined, s.timeLabel(isAr)),
               const SizedBox(height: 10),
-              _InfoRow(Icons.place_outlined, s.venue(isAr)),
+              _InfoRow(Icons.place_outlined, s.address(isAr)),
+              const SizedBox(height: 10),
+              _InfoRow(Icons.groups_outlined, s.audience(isAr)),
               const SizedBox(height: 10),
               _InfoRow(
                 Icons.event_seat_outlined,
@@ -239,11 +186,12 @@ class _TicketCardState extends State<_TicketCard> {
               ),
               const SizedBox(height: 20),
               GradientButton(
-                label: '${l10n.ctaReserve} · $branch',
+                label: l10n.reserveSeat,
                 expand: true,
                 icon: Icons.how_to_reg_rounded,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                onPressed: () => context.go('/register?session=${s.id}'),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                onPressed: () => context.go('/register'),
               ),
             ],
           ),

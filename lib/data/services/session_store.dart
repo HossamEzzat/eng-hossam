@@ -29,16 +29,17 @@ class SessionStore extends ChangeNotifier {
   /// Never seed, invent, or hardcode testimonials.
   void _seed() {
     final now = DateTime.now();
+    final official = SessionCatalog.official;
     registrations.addAll([
       Registration(
         id: 'seed_1',
         registrationId: 'REG-2026-1001',
         fullName: 'يوسف علي',
         mobile: '01012345678',
-        schoolName: 'مدرسة STEM الزقازيق',
+        schoolName: 'مدرسة السويس الثانوية',
         grade: 'الصف الأول الثانوي',
-        sessionId: 'ses_suez_2nd_suez',
-        sessionLabel: 'الثاني الثانوي · فرع السويس · ١–٣ ظهرًا',
+        sessionId: official.id,
+        sessionLabel: official.displayLabel(true),
         createdAt: now.subtract(const Duration(days: 2)),
         city: 'suez',
         attendanceConfirmed: true,
@@ -52,9 +53,9 @@ class SessionStore extends ChangeNotifier {
         fullName: 'سارة محمد',
         mobile: '01098765432',
         schoolName: 'مدرسة السويس الثانوية',
-        grade: 'الصف الأول الثانوي',
-        sessionId: 'ses_suez_1st_suez',
-        sessionLabel: 'الأول الثانوي · فرع السويس · ٣–٥ عصرًا',
+        grade: 'الصف الثاني الثانوي',
+        sessionId: official.id,
+        sessionLabel: official.displayLabel(true),
         createdAt: now.subtract(const Duration(days: 1)),
         city: 'suez',
       ),
@@ -84,9 +85,14 @@ class SessionStore extends ChangeNotifier {
     required String mobile,
     required String schoolName,
     required String grade,
-    required String sessionId,
+    String? sessionId,
   }) {
-    final session = sessions.firstWhere((s) => s.id == sessionId);
+    // Always assign the single official opening session.
+    final targetId = SessionCatalog.officialId;
+    final session = sessions.firstWhere(
+      (s) => s.id == targetId,
+      orElse: () => SessionCatalog.official,
+    );
     if (!session.registrationOpen) {
       throw StateError('التسجيل مغلق لهذه الجلسة.');
     }
@@ -104,16 +110,17 @@ class SessionStore extends ChangeNotifier {
       mobile: mobile.trim(),
       schoolName: schoolName.trim(),
       grade: grade.trim(),
-      sessionId: sessionId,
-      sessionLabel:
-          '${session.gradeLabel(true)} · ${session.branchLabel(true)} · ${session.timeLabelAr}',
+      sessionId: session.id,
+      sessionLabel: session.displayLabel(true),
       createdAt: DateTime.now(),
       city: session.cityKey,
     );
     registrations.insert(0, entry);
-    final i = sessions.indexWhere((s) => s.id == sessionId);
-    sessions[i] =
-        sessions[i].copyWith(remainingSeats: sessions[i].remainingSeats - 1);
+    final i = sessions.indexWhere((s) => s.id == session.id);
+    if (i >= 0) {
+      sessions[i] =
+          sessions[i].copyWith(remainingSeats: sessions[i].remainingSeats - 1);
+    }
     notifyListeners();
     return entry;
   }

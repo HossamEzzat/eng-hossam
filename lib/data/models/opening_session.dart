@@ -1,7 +1,17 @@
-/// Suez-only session catalog for Programming with Eng. Hossam.
-enum SessionBranch { suez, alSalam }
+/// Single official opening session — Programming with Eng. Hossam.
+///
+/// The entire website advertises only this session (GLC Academy, Suez).
+enum SessionBranch {
+  /// GLC Academy · Suez (only venue).
+  glc,
+}
 
-enum SessionGradeBand { firstSecondary, secondSecondary }
+enum SessionGradeBand {
+  /// Unified opening for First + Second Secondary.
+  both,
+  firstSecondary,
+  secondSecondary,
+}
 
 class OpeningSession {
   const OpeningSession({
@@ -19,6 +29,14 @@ class OpeningSession {
     required this.remainingSeats,
     required this.venueAr,
     required this.venueEn,
+    required this.academyAr,
+    required this.academyEn,
+    required this.addressAr,
+    required this.addressEn,
+    required this.courseAr,
+    required this.courseEn,
+    required this.audienceAr,
+    required this.audienceEn,
     this.registrationOpen = true,
   });
 
@@ -36,33 +54,44 @@ class OpeningSession {
   final int remainingSeats;
   final String venueAr;
   final String venueEn;
+  final String academyAr;
+  final String academyEn;
+  final String addressAr;
+  final String addressEn;
+  final String courseAr;
+  final String courseEn;
+  final String audienceAr;
+  final String audienceEn;
   final bool registrationOpen;
 
   String title(bool isAr) => isAr ? titleAr : titleEn;
   String dateLabel(bool isAr) => isAr ? dateLabelAr : dateLabelEn;
   String timeLabel(bool isAr) => isAr ? timeLabelAr : timeLabelEn;
   String venue(bool isAr) => isAr ? venueAr : venueEn;
+  String academy(bool isAr) => isAr ? academyAr : academyEn;
+  String address(bool isAr) => isAr ? addressAr : addressEn;
+  String course(bool isAr) => isAr ? courseAr : courseEn;
+  String audience(bool isAr) => isAr ? audienceAr : audienceEn;
 
-  /// City is always Suez for the current catalog.
   String get cityKey => 'suez';
-
-  String get branchKey =>
-      branch == SessionBranch.suez ? 'suez_branch' : 'al_salam';
+  String get branchKey => 'glc_academy';
 
   String cityLabel(bool isAr) => isAr ? 'السويس' : 'Suez';
 
-  String branchLabel(bool isAr) => branch == SessionBranch.suez
-      ? (isAr ? 'فرع السويس' : 'Suez Branch')
-      : (isAr ? 'فرع السلام' : 'Al Salam Branch');
+  String branchLabel(bool isAr) => academy(isAr);
 
-  String gradeLabel(bool isAr) => gradeBand == SessionGradeBand.firstSecondary
-      ? (isAr ? 'الصف الأول الثانوي' : 'First Secondary')
-      : (isAr ? 'الصف الثاني الثانوي' : 'Second Secondary');
+  String gradeLabel(bool isAr) => audience(isAr);
 
-  /// Matches registration form grade dropdown values.
-  String gradeFormValue(bool isAr) => gradeLabel(isAr);
+  /// Public registration still asks First vs Second Secondary.
+  String gradeFormValue(bool isAr) => isAr
+      ? 'الصف الأول الثانوي'
+      : 'First Secondary';
 
   int get availableSeats => remainingSeats;
+
+  String displayLabel(bool isAr) => isAr
+      ? '$courseAr · $academyAr · السويس · $timeLabelAr'
+      : '$courseEn · $academyEn · Suez · $timeLabelEn';
 
   OpeningSession copyWith({
     String? titleAr,
@@ -78,6 +107,14 @@ class OpeningSession {
     int? remainingSeats,
     String? venueAr,
     String? venueEn,
+    String? academyAr,
+    String? academyEn,
+    String? addressAr,
+    String? addressEn,
+    String? courseAr,
+    String? courseEn,
+    String? audienceAr,
+    String? audienceEn,
     bool? registrationOpen,
   }) {
     return OpeningSession(
@@ -95,6 +132,14 @@ class OpeningSession {
       remainingSeats: remainingSeats ?? this.remainingSeats,
       venueAr: venueAr ?? this.venueAr,
       venueEn: venueEn ?? this.venueEn,
+      academyAr: academyAr ?? this.academyAr,
+      academyEn: academyEn ?? this.academyEn,
+      addressAr: addressAr ?? this.addressAr,
+      addressEn: addressEn ?? this.addressEn,
+      courseAr: courseAr ?? this.courseAr,
+      courseEn: courseEn ?? this.courseEn,
+      audienceAr: audienceAr ?? this.audienceAr,
+      audienceEn: audienceEn ?? this.audienceEn,
       registrationOpen: registrationOpen ?? this.registrationOpen,
     );
   }
@@ -114,31 +159,47 @@ class OpeningSession {
         'remainingSeats': remainingSeats,
         'venueAr': venueAr,
         'venueEn': venueEn,
+        'academyAr': academyAr,
+        'academyEn': academyEn,
+        'addressAr': addressAr,
+        'addressEn': addressEn,
+        'courseAr': courseAr,
+        'courseEn': courseEn,
+        'audienceAr': audienceAr,
+        'audienceEn': audienceEn,
         'registrationOpen': registrationOpen,
       };
 
   factory OpeningSession.fromMap(String id, Map<String, dynamic> map) {
-    final branchRaw = map['branch'] as String? ?? 'suez_branch';
-    final gradeRaw = map['gradeBand'] as String? ?? 'secondSecondary';
     return OpeningSession(
       id: id,
-      titleAr: map['titleAr'] as String? ?? 'جلسة برمجة',
-      titleEn: map['titleEn'] as String? ?? 'Programming Session',
-      branch: branchRaw == 'al_salam'
-          ? SessionBranch.alSalam
-          : SessionBranch.suez,
-      gradeBand: gradeRaw == 'firstSecondary'
-          ? SessionGradeBand.firstSecondary
-          : SessionGradeBand.secondSecondary,
-      date: DateTime.parse(map['date'] as String),
-      dateLabelAr: map['dateLabelAr'] as String? ?? '',
-      dateLabelEn: map['dateLabelEn'] as String? ?? '',
-      timeLabelAr: map['timeLabelAr'] as String? ?? '',
-      timeLabelEn: map['timeLabelEn'] as String? ?? '',
-      totalSeats: map['totalSeats'] as int? ?? 40,
-      remainingSeats: map['remainingSeats'] as int? ?? 40,
-      venueAr: map['venueAr'] as String? ?? '',
-      venueEn: map['venueEn'] as String? ?? '',
+      titleAr: map['titleAr'] as String? ?? 'جلسة افتتاح دورة البرمجة',
+      titleEn: map['titleEn'] as String? ?? 'Programming Course Opening Session',
+      branch: SessionBranch.glc,
+      gradeBand: SessionGradeBand.both,
+      date: DateTime.parse(
+        map['date'] as String? ?? DateTime(2026, 9, 1, 18).toIso8601String(),
+      ),
+      dateLabelAr: map['dateLabelAr'] as String? ?? 'السويس',
+      dateLabelEn: map['dateLabelEn'] as String? ?? 'Suez',
+      timeLabelAr: map['timeLabelAr'] as String? ?? 'من ٦:٠٠ مساءً إلى ٨:٠٠ مساءً',
+      timeLabelEn: map['timeLabelEn'] as String? ?? '6:00 PM – 8:00 PM',
+      totalSeats: map['totalSeats'] as int? ?? 80,
+      remainingSeats: map['remainingSeats'] as int? ?? 80,
+      venueAr: map['venueAr'] as String? ?? 'أكاديمية GLC · السويس',
+      venueEn: map['venueEn'] as String? ?? 'GLC Academy · Suez',
+      academyAr: map['academyAr'] as String? ?? 'أكاديمية GLC',
+      academyEn: map['academyEn'] as String? ?? 'GLC Academy',
+      addressAr: map['addressAr'] as String? ??
+          'شارع الكورنيش القديم - منتجع الواتر واي',
+      addressEn: map['addressEn'] as String? ??
+          'Old Corniche Street, Water Way Resort',
+      courseAr: map['courseAr'] as String? ?? 'مادة البرمجة',
+      courseEn: map['courseEn'] as String? ?? 'Programming',
+      audienceAr: map['audienceAr'] as String? ??
+          'طلاب الصف الأول والثاني الثانوي',
+      audienceEn: map['audienceEn'] as String? ??
+          'First & Second Secondary · Egyptian Baccalaureate',
       registrationOpen: map['registrationOpen'] as bool? ?? true,
     );
   }
@@ -146,6 +207,8 @@ class OpeningSession {
 
 class SessionCatalog {
   SessionCatalog._();
+
+  static const String officialId = 'ses_glc_opening';
 
   static OpeningSession? byId(String id) {
     try {
@@ -155,55 +218,34 @@ class SessionCatalog {
     }
   }
 
-  /// Current catalog: Suez sessions only (Suez Branch + Al Salam Branch).
+  /// The only advertised opening session.
+  static OpeningSession get official => upcoming.first;
+
+  /// Current catalog: exactly one unified opening session.
   static final List<OpeningSession> upcoming = [
     OpeningSession(
-      id: 'ses_suez_2nd_suez',
-      titleAr: 'الثاني الثانوي · فرع السويس',
-      titleEn: 'Second Secondary · Suez Branch',
-      branch: SessionBranch.suez,
-      gradeBand: SessionGradeBand.secondSecondary,
-      date: DateTime(2026, 8, 5, 13, 0),
+      id: officialId,
+      titleAr: 'جلسة افتتاح دورة البرمجة',
+      titleEn: 'Programming Course Opening Session',
+      branch: SessionBranch.glc,
+      gradeBand: SessionGradeBand.both,
+      date: DateTime(2026, 9, 1, 18, 0),
       dateLabelAr: 'السويس',
       dateLabelEn: 'Suez',
-      timeLabelAr: '١:٠٠ ظهرًا – ٣:٠٠ عصرًا',
-      timeLabelEn: '1:00 PM – 3:00 PM',
-      totalSeats: 40,
-      remainingSeats: 40,
-      venueAr: 'فرع السويس',
-      venueEn: 'Suez Branch',
-    ),
-    OpeningSession(
-      id: 'ses_suez_2nd_salam',
-      titleAr: 'الثاني الثانوي · فرع السلام',
-      titleEn: 'Second Secondary · Al Salam Branch',
-      branch: SessionBranch.alSalam,
-      gradeBand: SessionGradeBand.secondSecondary,
-      date: DateTime(2026, 8, 5, 19, 0),
-      dateLabelAr: 'السويس',
-      dateLabelEn: 'Suez',
-      timeLabelAr: '٧:٠٠ مساءً – ٩:٠٠ مساءً',
-      timeLabelEn: '7:00 PM – 9:00 PM',
-      totalSeats: 40,
-      remainingSeats: 40,
-      venueAr: 'فرع السلام',
-      venueEn: 'Al Salam Branch',
-    ),
-    OpeningSession(
-      id: 'ses_suez_1st_suez',
-      titleAr: 'الأول الثانوي · فرع السويس',
-      titleEn: 'First Secondary · Suez Branch',
-      branch: SessionBranch.suez,
-      gradeBand: SessionGradeBand.firstSecondary,
-      date: DateTime(2026, 8, 5, 15, 0),
-      dateLabelAr: 'السويس',
-      dateLabelEn: 'Suez',
-      timeLabelAr: '٣:٠٠ عصرًا – ٥:٠٠ مساءً',
-      timeLabelEn: '3:00 PM – 5:00 PM',
-      totalSeats: 40,
-      remainingSeats: 40,
-      venueAr: 'فرع السويس',
-      venueEn: 'Suez Branch',
+      timeLabelAr: 'من ٦:٠٠ مساءً إلى ٨:٠٠ مساءً',
+      timeLabelEn: '6:00 PM – 8:00 PM',
+      totalSeats: 80,
+      remainingSeats: 80,
+      venueAr: 'أكاديمية GLC · السويس',
+      venueEn: 'GLC Academy · Suez',
+      academyAr: 'أكاديمية GLC',
+      academyEn: 'GLC Academy',
+      addressAr: 'شارع الكورنيش القديم - منتجع الواتر واي',
+      addressEn: 'Old Corniche Street · Water Way Resort · Suez, Egypt',
+      courseAr: 'مادة البرمجة',
+      courseEn: 'Programming',
+      audienceAr: 'طلاب الصف الأول والثاني الثانوي',
+      audienceEn: 'Egyptian Baccalaureate · First & Second Secondary',
     ),
   ];
 }

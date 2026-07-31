@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lumina/core/constants/app_constants.dart';
+import 'package:lumina/data/models/opening_session.dart';
 import 'package:lumina/data/models/registration.dart';
 import 'package:lumina/data/models/review.dart';
 import 'package:lumina/data/services/session_store.dart';
@@ -19,20 +20,19 @@ class SessionRepository {
     required String mobile,
     required String schoolName,
     required String grade,
-    required String sessionId,
+    String? sessionId,
   }) async {
+    final official = SessionCatalog.official;
     if (!AppConstants.useFirebase || _firestore == null) {
       return _store.register(
         fullName: fullName,
         mobile: mobile,
         schoolName: schoolName,
         grade: grade,
-        sessionId: sessionId,
       );
     }
 
     final doc = _firestore.collection('registrations').doc();
-    final session = _store.sessions.firstWhere((s) => s.id == sessionId);
     final entry = Registration(
       id: doc.id,
       registrationId: 'REG-2026-${doc.id.substring(0, 4).toUpperCase()}',
@@ -40,9 +40,8 @@ class SessionRepository {
       mobile: mobile.trim(),
       schoolName: schoolName.trim(),
       grade: grade.trim(),
-      sessionId: sessionId,
-      sessionLabel:
-          '${session.gradeLabel(true)} · ${session.branchLabel(true)} · ${session.timeLabelAr}',
+      sessionId: official.id,
+      sessionLabel: official.displayLabel(true),
       createdAt: DateTime.now(),
       city: 'suez',
     );

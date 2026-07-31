@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lumina/core/constants/app_constants.dart';
 import 'package:lumina/core/extensions/context_extensions.dart';
 import 'package:lumina/core/extensions/l10n_extensions.dart';
 import 'package:lumina/data/models/opening_session.dart';
@@ -17,6 +18,7 @@ import 'package:lumina/theme/app_colors.dart';
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key, this.preselectedSessionId});
 
+  /// Ignored — every registration joins the single official session.
   final String? preselectedSessionId;
 
   @override
@@ -30,25 +32,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _school = TextEditingController();
 
   String? _grade;
-  String? _sessionId;
   bool _loading = false;
   Registration? _success;
-
-  @override
-  void initState() {
-    super.initState();
-    final pre = widget.preselectedSessionId;
-    if (pre != null && SessionCatalog.byId(pre) != null) {
-      final session = SessionCatalog.byId(pre)!;
-      _sessionId = pre;
-      // Grade is set after first frame when locale is available.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final isAr = Localizations.localeOf(context).languageCode == 'ar';
-        setState(() => _grade = session.gradeFormValue(isAr));
-      });
-    }
-  }
 
   @override
   void dispose() {
@@ -61,10 +46,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Future<void> _submit() async {
     final l10n = context.l10n;
     if (!_formKey.currentState!.validate()) return;
-    if (_sessionId == null) {
-      context.showSnack(l10n.validateSession);
-      return;
-    }
     if (_grade == null) {
       context.showSnack(l10n.validateGrade);
       return;
@@ -76,7 +57,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             mobile: _mobile.text,
             schoolName: _school.text,
             grade: _grade!,
-            sessionId: _sessionId!,
           );
       if (!mounted) return;
       setState(() => _success = reg);
@@ -110,10 +90,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   Widget _buildForm() {
     final l10n = context.l10n;
-    final store = ref.watch(sessionStoreProvider);
-    final sessions = store.sessions;
-    final locked = widget.preselectedSessionId != null &&
-        SessionCatalog.byId(widget.preselectedSessionId!) != null;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final session = SessionCatalog.official;
     final grades = [l10n.gradeFirst, l10n.gradeSecond];
 
     return GlassCard(
@@ -136,7 +114,59 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 color: AppColors.textSoft,
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: AppColors.primary.withValues(alpha: 0.08),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.28),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    session.title(isAr),
+                    style: context.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '📍 ${session.cityLabel(isAr)} · 🏫 ${session.academy(isAr)}',
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSoft,
+                      height: 1.45,
+                    ),
+                  ),
+                  Text(
+                    '📌 ${session.address(isAr)}',
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSoft,
+                      height: 1.45,
+                    ),
+                  ),
+                  Text(
+                    '🕕 ${session.timeLabel(isAr)}',
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSoft,
+                      height: 1.45,
+                    ),
+                  ),
+                  Text(
+                    '👨‍🏫 ${isAr ? AppConstants.instructorNameAr : AppConstants.instructorNameEn}',
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSoft,
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
             TextFormField(
               controller: _name,
               textCapitalization: TextCapitalization.words,
@@ -198,36 +228,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               onChanged: (v) => setState(() => _grade = v),
               validator: (v) => v == null ? l10n.validateGrade : null,
             ),
-            const SizedBox(height: 24),
-            Text(
-              l10n.fieldSession,
-              style: context.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final s in sessions)
-                  _SessionChip(
-                    session: s,
-                    selected: _sessionId == s.id,
-                    enabled: !locked || s.id == _sessionId,
-                    onTap: locked
-                        ? null
-                        : () => setState(() {
-                              _sessionId = s.id;
-                              final isAr =
-                                  Localizations.localeOf(context).languageCode ==
-                                      'ar';
-                              _grade = s.gradeFormValue(isAr);
-                            }),
-                  ),
-              ],
-            ),
             const SizedBox(height: 28),
             GradientButton(
               label: l10n.submitRegister,
@@ -267,6 +267,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   fontWeight: FontWeight.w800,
                   height: 1.35,
                   color: AppColors.text,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                live.sessionLabel,
+                textAlign: TextAlign.center,
+                style: context.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                  height: 1.45,
                 ),
               ),
               const SizedBox(height: 12),
@@ -350,72 +360,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _SessionChip extends StatelessWidget {
-  const _SessionChip({
-    required this.session,
-    required this.selected,
-    required this.enabled,
-    this.onTap,
-  });
-
-  final OpeningSession session;
-  final bool selected;
-  final bool enabled;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final full = session.remainingSeats <= 0;
-    final branch = session.branch == SessionBranch.suez
-        ? l10n.branchSuez
-        : l10n.branchAlSalam;
-
-    return FilterChip(
-      selected: selected,
-      showCheckmark: false,
-      onSelected: (!enabled || full || onTap == null) ? null : (_) => onTap!(),
-      label: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '${session.gradeLabel(isAr)} · $branch',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: selected ? Colors.white : AppColors.text,
-            ),
-          ),
-          Text(
-            full
-                ? l10n.adminPending
-                : '${session.timeLabel(isAr)} · ${session.remainingSeats} ${l10n.seatsRemaining}',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              color: selected
-                  ? Colors.white.withValues(alpha: 0.9)
-                  : AppColors.textSoft,
-            ),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      selectedColor: AppColors.primary,
-      backgroundColor: AppColors.card,
-      side: BorderSide(
-        color: selected
-            ? AppColors.primary
-            : AppColors.border.withValues(alpha: 0.8),
-      ),
     );
   }
 }

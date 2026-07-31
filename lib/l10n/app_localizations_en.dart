@@ -64,7 +64,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get heroSubtitle =>
-      'Learn programming the practical way — with a clear roadmap designed for First and Second Secondary students in Egypt’s Baccalaureate system.';
+      'Learn programming the practical way — one opening session at GLC Academy in Suez for First and Second Secondary students in Egypt’s Baccalaureate system.';
 
   @override
   String get statStudents => 'Students';
@@ -146,10 +146,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionsSubtitle =>
-      'Suez sessions — Suez Branch & Al Salam Branch. Limited seats.';
+      'One official opening session at GLC Academy, Suez — 6:00 PM to 8:00 PM. Limited seats.';
 
   @override
-  String get sessionsTitle => 'Be part of the first cohort';
+  String get sessionsTitle => 'Programming Course Opening Session';
 
   @override
   String get registrationOpen => 'Registration open';
@@ -158,7 +158,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seatsRemaining => 'Seats remaining';
 
   @override
-  String get reserveSeat => 'Reserve seat';
+  String get reserveSeat => 'Reserve your seat now';
 
   @override
   String get sessionTitle => 'Opening Programming Session';
@@ -300,10 +300,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get citySuez => 'Suez';
 
   @override
-  String get branchSuez => 'Suez Branch';
+  String get branchSuez => 'GLC Academy';
 
   @override
-  String get branchAlSalam => 'Al Salam Branch';
+  String get branchAlSalam => 'GLC Academy';
 
   @override
   String get sessionRegionSuez => 'Suez';
