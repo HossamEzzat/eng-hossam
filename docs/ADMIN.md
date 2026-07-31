@@ -41,18 +41,15 @@ To switch backends: implement `LoginRepository` and return it from `adminAuthRep
 
 ---
 
-## Temporary credentials (GitHub Pages / local)
+## Single owner-admin
 
-`AppConstants.useFirebase = false` — uses `AdminAuthConfig`.
+There is **exactly one** admin account: Eng. Hossam.
 
-Edit **only** `lib/core/config/admin_auth_config.dart` — never show these values in the UI.
+- No public signup / setup of additional admins
+- Login at `/admin/login` with that one email + password
+- Credentials live only in `lib/core/config/admin_auth_config.dart` (never shown in UI)
 
-Flow:
-1. Footer → Admin Login → empty email + password form
-2. Correct credentials → Admin Dashboard
-3. Wrong credentials → stay on login, show **Invalid email or password.**
-
-> Client-side config is for development/static hosting only. Anyone can inspect a web build. Replace with Firebase/Supabase/API before treating this as production security.
+Edit email/password in that config file, rebuild, and redeploy.
 
 ---
 

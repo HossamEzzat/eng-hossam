@@ -4,8 +4,8 @@ import 'package:lumina/shared/widgets/glass_card.dart';
 import 'package:lumina/shared/widgets/gradient_button.dart';
 import 'package:lumina/theme/app_colors.dart';
 
-/// Firebase-only first-admin bootstrap entry.
-/// Local/dev static hosting always redirects here away to [/admin/login].
+/// Setup is unused for the single-owner local admin.
+/// Always send visitors to the login form.
 class AdminSetupPage extends StatelessWidget {
   const AdminSetupPage({super.key});
 
@@ -24,7 +24,7 @@ class AdminSetupPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Admin setup',
+                    'Admin access',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: AppColors.text,
@@ -32,9 +32,8 @@ class AdminSetupPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Use Admin Login with your configured credentials. '
-                    'Firebase first-admin bootstrap is available only when '
-                    'useFirebase is enabled.',
+                    'This site has a single owner-admin account. '
+                    'There is no public signup. Sign in with your admin email and password.',
                     style: TextStyle(color: AppColors.textSoft, height: 1.5),
                   ),
                   const SizedBox(height: 24),

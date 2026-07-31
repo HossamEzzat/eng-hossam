@@ -1,23 +1,26 @@
+import 'package:flutter/foundation.dart';
 import 'package:lumina/core/config/admin_auth_config.dart';
 import 'package:lumina/features/admin/auth/admin_auth_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart';
 
-/// Temporary credential check against [AdminAuthConfig].
+/// Single-owner credential check against [AdminAuthConfig].
 ///
-/// Suitable for static hosting (GitHub Pages) until a real backend is wired.
+/// Only Eng. Hossam's configured email + password can authenticate.
+/// Suitable for GitHub Pages until a real backend is wired.
 /// UI must never read [AdminAuthConfig] — only this repository may.
 class LocalDevAdminAuthRepository implements LoginRepository {
   LocalDevAdminAuthRepository();
+
+  bool _isOwner(String email) =>
+      email.trim().toLowerCase() ==
+      AdminAuthConfig.adminEmail.trim().toLowerCase();
 
   @override
   Future<AdminSession?> restoreSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString(AdminAuthConfig.sessionStorageKey);
-      if (email == null || email.isEmpty) return null;
-      // Only restore if it still matches the configured admin.
-      if (email.toLowerCase() != AdminAuthConfig.adminEmail.toLowerCase()) {
+      if (email == null || email.isEmpty || !_isOwner(email)) {
         await prefs.remove(AdminAuthConfig.sessionStorageKey);
         return null;
       }
@@ -40,12 +43,11 @@ class LocalDevAdminAuthRepository implements LoginRepository {
       return AdminAuthResult.fail('Invalid email or password.');
     }
 
-    final okEmail =
-        mail == AdminAuthConfig.adminEmail.trim().toLowerCase();
+    // Exactly one admin account — no other emails can sign in.
+    final okOwner = _isOwner(mail);
     final okPass = pass == AdminAuthConfig.adminPassword;
 
-    if (!okEmail || !okPass) {
-      // Constant message — do not reveal which field failed.
+    if (!okOwner || !okPass) {
       return AdminAuthResult.fail('Invalid email or password.');
     }
 

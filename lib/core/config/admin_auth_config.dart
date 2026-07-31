@@ -1,19 +1,19 @@
-/// Temporary admin credentials for static hosting (e.g. GitHub Pages).
+/// Single owner-admin credentials for static hosting (GitHub Pages).
 ///
-/// Replace [LocalDevAdminAuthRepository] with Firebase/Supabase/API later —
-/// this file is the only place to change temporary email/password.
+/// There is exactly **one** admin account: Eng. Hossam.
+/// No signup, no multi-admin, no public credential display.
 ///
-/// Keep this out of public UI. Never display these values on screen.
-/// Rotate after any accidental exposure on a public page.
+/// Change email/password only in this file. Never show them in the UI.
+/// Replace [LocalDevAdminAuthRepository] with a real backend later.
 class AdminAuthConfig {
   AdminAuthConfig._();
 
-  /// Development / static-host temporary admin.
-  static const String adminEmail = 'admin@enghossam.app';
+  /// The only admin login email (Eng. Hossam).
+  static const String adminEmail = 'hossamezzat199@gmail.com';
 
-  /// Rotated after credentials were previously shown on the login UI.
+  /// The only admin password — keep private; edit here to rotate.
   static const String adminPassword = 'HossamAdmin!2026';
 
-  /// Session key for local persistence after a successful login.
-  static const String sessionStorageKey = 'eng_hossam_admin_session_v1';
+  /// Session key after a successful login (bumped to invalidate old demos).
+  static const String sessionStorageKey = 'eng_hossam_owner_admin_v2';
 }
