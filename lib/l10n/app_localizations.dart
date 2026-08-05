@@ -1265,7 +1265,7 @@ abstract class AppLocalizations {
   /// No description provided for @journeyAttendDesc.
   ///
   /// In ar, this message translates to:
-  /// **'بانتظار تأكيد حضورك من المدرب.'**
+  /// **'الحضور للمتابعة التعليمية — الشهادة جاهزة فور التسجيل بدون انتظار تأكيد.'**
   String get journeyAttendDesc;
 
   /// No description provided for @journeyAttendDoneDesc.
@@ -1289,7 +1289,7 @@ abstract class AppLocalizations {
   /// No description provided for @journeyCertCurrentDesc.
   ///
   /// In ar, this message translates to:
-  /// **'شهادتك جاهزة — حمّلها الآن.'**
+  /// **'شهادتك جاهزة الآن — اضغط للتحميل.'**
   String get journeyCertCurrentDesc;
 
   /// No description provided for @journeyReviewTitle.

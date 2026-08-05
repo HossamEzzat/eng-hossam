@@ -626,7 +626,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get journeyAttendDesc =>
-      'Waiting for the instructor to confirm attendance.';
+      'Attendance is for learning follow-up — your certificate is ready right after registration.';
 
   @override
   String get journeyAttendDoneDesc => 'Attendance confirmed — well done!';
@@ -640,7 +640,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get journeyCertCurrentDesc =>
-      'Your certificate is ready — download it now.';
+      'Your certificate is ready now — tap to download.';
 
   @override
   String get journeyReviewTitle => 'Share your experience';

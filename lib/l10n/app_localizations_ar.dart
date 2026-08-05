@@ -617,7 +617,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get journeyAttendTitle => 'حضور الجلسة';
 
   @override
-  String get journeyAttendDesc => 'بانتظار تأكيد حضورك من المدرب.';
+  String get journeyAttendDesc =>
+      'الحضور للمتابعة التعليمية — الشهادة جاهزة فور التسجيل بدون انتظار تأكيد.';
 
   @override
   String get journeyAttendDoneDesc => 'تم تأكيد حضورك — أحسنت!';
@@ -630,7 +631,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'شهادتك جاهزة فور التسجيل — حمّلها برقم موبايلك.';
 
   @override
-  String get journeyCertCurrentDesc => 'شهادتك جاهزة — حمّلها الآن.';
+  String get journeyCertCurrentDesc => 'شهادتك جاهزة الآن — اضغط للتحميل.';
 
   @override
   String get journeyReviewTitle => 'مشاركة التقييم';

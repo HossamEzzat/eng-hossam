@@ -48,8 +48,8 @@ class StudentJourney {
             ? JourneyStepVisual.completed
             : JourneyStepVisual.locked;
       case JourneyMilestone.attended:
+        // Attendance no longer gates the certificate — never highlight as blocker.
         if (attendanceConfirmed) return JourneyStepVisual.completed;
-        if (registrationCompleted) return JourneyStepVisual.current;
         return JourneyStepVisual.locked;
       case JourneyMilestone.certificate:
         if (certificateDownloaded) return JourneyStepVisual.completed;

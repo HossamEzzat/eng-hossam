@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>تحديث الموقع · بشمهندس حسام</title>
+  <style>
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      background:#0B1120; color:#E2E8F0; font-family:system-ui,sans-serif; text-align:center; padding:24px; }
+    a { color:#22D3EE; font-weight:700; font-size:1.1rem; }
+    p { opacity:.85; line-height:1.7; max-width:420px; }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>جاري مسح النسخة القديمة…</h1>
+    <p>اضغط الرابط بالأسفل بعد ثانيتين لو الصفحة ما اتحوّلتش تلقائيًا.</p>
+    <p><a id="go" href="./?_v=1.0.16%2B17">فتح الموقع المحدّث</a></p>
+  </div>
+  <script>
+    (async function () {
+      try {
+        if ('serviceWorker' in navigator) {
+          var regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }
+      } catch (e) {}
+      try {
+        if (window.caches) {
+          var keys = await caches.keys();
+          await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        }
+      } catch (e) {}
+      try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+      var target = './certificate?_v=1.0.16%2B17';
+      document.getElementById('go').href = target;
+      setTimeout(function () { location.replace(target); }, 600);
+    })();
+  </script>
+</body>
+</html>
