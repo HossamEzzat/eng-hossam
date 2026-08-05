@@ -19,10 +19,10 @@ class HomePage extends StatelessWidget {
       child: Column(
         children: [
           HeroSection(),
+          PromoQrSection(),
           WhyProgrammingSection(),
           WhyLearnSection(),
           UpcomingSessionsSection(),
-          PromoQrSection(),
           SessionContentSection(),
           InstructorTeaserSection(),
           ReviewsTeaserSection(),

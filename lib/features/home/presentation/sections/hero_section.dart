@@ -353,7 +353,7 @@ class _LiveStatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final items = [
-      (students.clamp(250, 9999), l10n.statStudents),
+      (students.clamp(0, 9999), l10n.statStudents),
       (apps, l10n.statApps),
       (academies, l10n.statAcademies),
       (awards.clamp(5, 99), l10n.statAwards),
