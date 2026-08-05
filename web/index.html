@@ -18,35 +18,46 @@
   <title>Eng. Hossam · بشمهندس حسام</title>
   <link rel="manifest" href="manifest.json">
   <style>
-    html, body { margin: 0; height: 100%; background: #0B1120; }
+    html, body { margin: 0; height: 100%; background: #0B1120; color: #E2E8F0; font-family: system-ui, sans-serif; }
+    #boot { display:flex; align-items:center; justify-content:center; height:100%; text-align:center; padding:24px; }
   </style>
 </head>
 <body>
+  <div id="boot">جاري تحديث الموقع…</div>
   <script>
-    // Safari can hang forever on serviceWorker.getRegistrations() / caches.keys().
-    // Never block Flutter boot on cache wipe. Build stamp: 1.0.14+15
+    // Force clients off stale Flutter SW shells (e.g. stuck on 1.0.9+10).
+    // Build stamp: 1.0.15+16 — instant certificate, no attendance wait.
     (function () {
-      var BUILD = '1.0.14+15';
+      var BUILD = '1.0.15+16';
       var KEY = 'eng_hossam_build';
       var booted = false;
 
       function bootFlutter() {
         if (booted) return;
         booted = true;
+        var bootEl = document.getElementById('boot');
+        if (bootEl) bootEl.remove();
         var s = document.createElement('script');
         s.src = 'flutter_bootstrap.js?v=' + encodeURIComponent(BUILD);
         s.async = true;
         document.body.appendChild(s);
       }
 
-      function wipeCaches() {
+      function wipeAll() {
         var tasks = [];
         try {
           if ('serviceWorker' in navigator) {
+            // Install a one-shot kill-switch worker so older Flutter SW caches
+            // (stuck on 1.0.9) get replaced, cleared, then unregistered.
             tasks.push(
-              navigator.serviceWorker.getRegistrations().then(function (regs) {
-                return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
-              })
+              navigator.serviceWorker
+                .register('flutter_service_worker.js?v=' + encodeURIComponent(BUILD))
+                .catch(function () { return null; })
+                .then(function () {
+                  return navigator.serviceWorker.getRegistrations().then(function (regs) {
+                    return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+                  });
+                })
             );
           }
         } catch (e) {}
@@ -59,29 +70,55 @@
             );
           }
         } catch (e) {}
+        try { localStorage.setItem(KEY, BUILD); } catch (e) {}
+        try { sessionStorage.clear(); } catch (e) {}
         return Promise.all(tasks);
       }
 
-      var previous = null;
-      try { previous = localStorage.getItem(KEY); } catch (e) {}
+      function needsUrlBump() {
+        try {
+          return new URL(window.location.href).searchParams.get('_v') !== BUILD;
+        } catch (e) {
+          return true;
+        }
+      }
 
-      // Hard timeout so Safari never leaves a blank page.
-      setTimeout(bootFlutter, 1200);
-
-      wipeCaches().then(function () {
-        try { localStorage.setItem(KEY, BUILD); } catch (e) {}
-        if (previous && previous !== BUILD) {
+      function bumpUrlAndReload() {
+        try {
           var url = new URL(window.location.href);
-          if (url.searchParams.get('_v') !== BUILD) {
-            url.searchParams.set('_v', BUILD);
-            window.location.replace(url.toString());
-            return;
-          }
+          url.searchParams.set('_v', BUILD);
+          // Drop hash leftovers that old shells used.
+          url.hash = '';
+          window.location.replace(url.toString());
+        } catch (e) {
+          bootFlutter();
+        }
+      }
+
+      // Always land on the current build stamp in the URL so old ?_v=1.0.9+10
+      // bookmarks cannot keep serving a stale shell.
+      wipeAll().then(function () {
+        if (needsUrlBump()) {
+          bumpUrlAndReload();
+          return;
         }
         bootFlutter();
       }).catch(function () {
+        if (needsUrlBump()) {
+          bumpUrlAndReload();
+          return;
+        }
         bootFlutter();
       });
+
+      // Failsafe boot if wipe hangs (Safari).
+      setTimeout(function () {
+        if (needsUrlBump()) {
+          bumpUrlAndReload();
+          return;
+        }
+        bootFlutter();
+      }, 1500);
     })();
   </script>
 </body>
