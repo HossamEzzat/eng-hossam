@@ -8,6 +8,7 @@ import 'package:lumina/features/home/presentation/sections/upcoming_sessions_sec
 import 'package:lumina/features/home/presentation/sections/why_learn_section.dart';
 import 'package:lumina/features/home/presentation/sections/why_programming_section.dart';
 import 'package:lumina/shared/layouts/site_shell.dart';
+import 'package:lumina/shared/widgets/promo_qr_section.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -24,6 +25,7 @@ class HomePage extends StatelessWidget {
           SessionContentSection(),
           InstructorTeaserSection(),
           ReviewsTeaserSection(),
+          PromoQrSection(),
           FinalCtaSection(),
           SizedBox(height: 48),
         ],

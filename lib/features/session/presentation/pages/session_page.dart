@@ -12,6 +12,7 @@ import 'package:lumina/shared/layouts/site_shell.dart';
 import 'package:lumina/shared/widgets/fade_in_view.dart';
 import 'package:lumina/shared/widgets/glass_card.dart';
 import 'package:lumina/shared/widgets/gradient_button.dart';
+import 'package:lumina/shared/widgets/promo_qr_section.dart';
 import 'package:lumina/shared/widgets/section_header.dart';
 import 'package:lumina/theme/app_colors.dart';
 
@@ -64,6 +65,8 @@ class SessionPage extends ConsumerWidget {
                 const SizedBox(height: 64),
                 const FadeInView(child: _Practicals()),
                 const SizedBox(height: 64),
+                const FadeInView(child: PromoQrSection(compact: true)),
+                const SizedBox(height: 40),
                 const FadeInView(child: _SessionCta()),
                 const SizedBox(height: 32),
               ],

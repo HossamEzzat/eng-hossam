@@ -10,6 +10,7 @@ import 'package:lumina/shared/layouts/site_shell.dart';
 import 'package:lumina/shared/widgets/fade_in_view.dart';
 import 'package:lumina/shared/widgets/glass_card.dart';
 import 'package:lumina/shared/widgets/gradient_button.dart';
+import 'package:lumina/shared/widgets/promo_qr_section.dart';
 import 'package:lumina/shared/widgets/section_header.dart';
 import 'package:lumina/theme/app_colors.dart';
 
@@ -73,7 +74,9 @@ class _ContactPageState extends State<ContactPage> {
                 ),
                 const SizedBox(height: 40),
                 const _ContactChannels(),
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
+                const PromoQrSection(compact: true),
+                const SizedBox(height: 24),
                 _MessageForm(
                   formKey: _formKey,
                   name: _name,
