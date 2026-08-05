@@ -6,24 +6,65 @@ import 'package:lumina/data/repositories/providers.dart';
 import 'package:lumina/features/admin/presentation/widgets/admin_ui.dart';
 import 'package:lumina/theme/app_colors.dart';
 
-class AdminReviewsPage extends ConsumerWidget {
+class AdminReviewsPage extends ConsumerStatefulWidget {
   const AdminReviewsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminReviewsPage> createState() => _AdminReviewsPageState();
+}
+
+class _AdminReviewsPageState extends ConsumerState<AdminReviewsPage> {
+  bool _refreshing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+  }
+
+  Future<void> _refresh() async {
+    if (_refreshing) return;
+    setState(() => _refreshing = true);
+    try {
+      await ref.read(sessionRepositoryProvider).syncFromRemote();
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final store = ref.watch(sessionStoreProvider);
     final reviews = store.reviews;
     final fmt = DateFormat('yyyy-MM-dd HH:mm');
+    final repo = ref.read(sessionRepositoryProvider);
 
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text(
-          'Reviews',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: AppColors.text,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Reviews',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.text,
+                    ),
               ),
+            ),
+            IconButton(
+              tooltip: 'Refresh from Firebase',
+              onPressed: _refreshing ? null : _refresh,
+              icon: _refreshing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh_rounded),
+            ),
+          ],
         ),
         const SizedBox(height: 6),
         Text(
@@ -89,7 +130,10 @@ class AdminReviewsPage extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                     r.comment,
-                    style: const TextStyle(color: AppColors.textSoft, height: 1.45),
+                    style: const TextStyle(
+                      color: AppColors.textSoft,
+                      height: 1.45,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -104,22 +148,26 @@ class AdminReviewsPage extends ConsumerWidget {
                     spacing: 8,
                     children: [
                       TextButton(
-                        onPressed: () {
-                          store.setReviewStatus(
+                        onPressed: () async {
+                          await repo.setReviewStatus(
                             r.id,
                             ReviewModerationStatus.approved,
                           );
-                          adminSnack(context, 'Review approved');
+                          if (context.mounted) {
+                            adminSnack(context, 'Review approved');
+                          }
                         },
                         child: const Text('Approve'),
                       ),
                       TextButton(
-                        onPressed: () {
-                          store.setReviewStatus(
+                        onPressed: () async {
+                          await repo.setReviewStatus(
                             r.id,
                             ReviewModerationStatus.hidden,
                           );
-                          adminSnack(context, 'Review hidden');
+                          if (context.mounted) {
+                            adminSnack(context, 'Review hidden');
+                          }
                         },
                         child: const Text('Hide'),
                       ),
@@ -133,7 +181,7 @@ class AdminReviewsPage extends ConsumerWidget {
                             confirmLabel: 'Delete',
                           );
                           if (!ok) return;
-                          store.deleteReview(r.id);
+                          await repo.deleteReview(r.id);
                           if (context.mounted) {
                             adminSnack(context, 'Review deleted');
                           }

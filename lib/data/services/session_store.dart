@@ -165,6 +165,28 @@ class SessionStore extends ChangeNotifier {
     _persistAll();
   }
 
+  /// Replace in-memory reviews (e.g. after a Firestore pull) and persist.
+  void replaceReviews(List<Review> list) {
+    reviews
+      ..clear()
+      ..addAll(list);
+    reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    notifyListeners();
+    _persistAll();
+  }
+
+  /// Insert or update a review already saved in Firestore.
+  void adoptReview(Review entry) {
+    final i = reviews.indexWhere((r) => r.id == entry.id);
+    if (i >= 0) {
+      reviews[i] = entry;
+    } else {
+      reviews.insert(0, entry);
+    }
+    notifyListeners();
+    _persistAll();
+  }
+
   /// Public marketing counts — real registrations only (no inflated demos).
   int get displaySocialProofRegistered => registrations.length;
   int get displaySocialProofCertificates =>

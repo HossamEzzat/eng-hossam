@@ -24,7 +24,7 @@ class SessionRepository {
 
   bool get _remote => AppConstants.useFirebase && _firestore != null;
 
-  /// Pull all registrations from Firestore into the local cache/admin list.
+  /// Pull registrations + reviews from Firestore into the local admin cache.
   Future<void> syncFromRemote() async {
     if (!_remote) return;
     try {
@@ -35,8 +35,45 @@ class SessionRepository {
       _store.replaceRegistrations(list);
       debugPrint('syncFromRemote: ${list.length} registrations');
     } catch (e, st) {
-      debugPrint('syncFromRemote failed: $e');
+      debugPrint('syncFromRemote registrations failed: $e');
       debugPrint('$st');
+    }
+
+    try {
+      final snap = await _firestore!.collection('reviews').get();
+      final list = snap.docs
+          .map((d) => Review.fromMap(d.id, d.data()))
+          .toList();
+      if (list.isNotEmpty) {
+        _store.replaceReviews(list);
+        debugPrint('syncFromRemote: ${list.length} reviews');
+        return;
+      }
+    } catch (e, st) {
+      debugPrint('syncFromRemote reviews failed: $e');
+      debugPrint('$st');
+    }
+
+    // Fallback: rebuild pending review cards from registration fields when the
+    // reviews collection is empty or not readable (e.g. old security rules).
+    final fromRegs = <Review>[
+      for (final r in _store.registrations)
+        if (r.reviewSubmitted && (r.rating != null || (r.reviewComment ?? '').isNotEmpty))
+          Review(
+            id: r.reviewId ?? 'from-reg-${r.id}',
+            rating: r.rating ?? 0,
+            comment: r.reviewComment ?? '',
+            suggestions: '',
+            createdAt: r.reviewSubmittedAt ?? r.lastUpdated ?? r.createdAt,
+            name: r.fullName,
+            registrationId: r.registrationId,
+            studentId: r.id,
+            status: ReviewModerationStatus.pending,
+          ),
+    ];
+    if (fromRegs.isNotEmpty) {
+      _store.replaceReviews(fromRegs);
+      debugPrint('syncFromRemote: ${fromRegs.length} reviews from registrations');
     }
   }
 
@@ -169,7 +206,38 @@ class SessionRepository {
       comment: entry.comment,
       reviewId: entry.id,
     );
+    _store.adoptReview(entry);
     return entry;
+  }
+
+  Future<void> setReviewStatus(
+    String id,
+    ReviewModerationStatus status,
+  ) async {
+    _store.setReviewStatus(id, status);
+    if (!_remote) return;
+    if (id.startsWith('from-reg-')) return;
+    try {
+      await _firestore!.collection('reviews').doc(id).update({
+        'status': status.name,
+      });
+    } catch (e, st) {
+      debugPrint('setReviewStatus remote failed: $e');
+      debugPrint('$st');
+    }
+  }
+
+  Future<void> deleteReview(String id) async {
+    _store.deleteReview(id);
+    if (!_remote) return;
+    // Synthetic ids from registration fallback are not Firestore docs.
+    if (id.startsWith('from-reg-')) return;
+    try {
+      await _firestore!.collection('reviews').doc(id).delete();
+    } catch (e, st) {
+      debugPrint('deleteReview remote failed: $e');
+      debugPrint('$st');
+    }
   }
 
   Future<void> markCertificateDownloaded(String id) async {
