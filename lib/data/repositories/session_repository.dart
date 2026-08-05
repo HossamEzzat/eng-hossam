@@ -134,8 +134,10 @@ class SessionRepository {
       return _store.findByMobileOrId(query);
     }
     // Prefer local cache first (fresh after sync / recent register).
-    final local = _store.findByMobileOrId(query);
-    if (local != null) return local;
+    var local = _store.findByMobileOrId(query);
+    if (local != null) {
+      return _ensureCertificateReady(local);
+    }
 
     final q = query.trim();
     for (final field in ['registrationId', 'mobile', 'fullName', 'phone']) {
@@ -148,10 +150,33 @@ class SessionRepository {
         final entry =
             Registration.fromMap(snap.docs.first.id, snap.docs.first.data());
         _store.adoptRegistration(entry);
-        return entry;
+        return _ensureCertificateReady(entry);
       }
     }
     return null;
+  }
+
+  /// Any registered student can download immediately — no attendance wait.
+  Future<Registration> _ensureCertificateReady(Registration reg) async {
+    if (reg.certificateIssued) return reg;
+    final now = DateTime.now();
+    final ready = reg.copyWith(
+      certificateIssued: true,
+      certificateIssuedAt: now,
+    );
+    _store.adoptRegistration(ready);
+    if (_remote) {
+      try {
+        await _firestore!.collection(_regsCollection).doc(reg.id).update({
+          'certificateIssued': true,
+          'certificateIssuedAt': now.toIso8601String(),
+        });
+      } catch (e, st) {
+        debugPrint('ensureCertificateReady failed: $e');
+        debugPrint('$st');
+      }
+    }
+    return ready;
   }
 
   Future<Review> submitReview({

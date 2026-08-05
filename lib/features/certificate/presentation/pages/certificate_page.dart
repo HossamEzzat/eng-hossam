@@ -75,8 +75,6 @@ class _CertificatePageState extends ConsumerState<CertificatePage> {
       _lookedUpId = reg?.id;
       if (reg == null) {
         _error = l10n.certNotFound;
-      } else if (!reg.certificateApproved) {
-        _error = l10n.certPending;
       }
     });
   }
@@ -96,7 +94,8 @@ class _CertificatePageState extends ConsumerState<CertificatePage> {
     final l10n = context.l10n;
     ref.watch(sessionStoreProvider);
     final result = _liveRegistration();
-    final showCert = result != null && result.certificateApproved;
+    // Instant certificate: found registration == eligible (no attendance gate).
+    final showCert = result != null;
     final unlockedReview = result != null &&
         result.certificateDownloaded &&
         !result.reviewSubmitted;
