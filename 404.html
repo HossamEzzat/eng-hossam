@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <base href="/eng-hossam/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="بشمهندس حسام — جلسة افتتاح دورة البرمجة في أكاديمية GLC بالسويس (شارع الكورنيش القديم - منتجع الواتر واي) من ٦ إلى ٨ مساءً لطلاب الأول والثاني الثانوي. احجز مكانك الآن.">
+  <meta name="theme-color" content="#0B1120">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Eng. Hossam">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>Eng. Hossam · بشمهندس حسام</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { margin: 0; height: 100%; background: #0B1120; }
+  </style>
+  <script>
+    // Drop stale Flutter/PWA caches that keep serving the old Sept-1 countdown.
+    // Build stamp: 1.0.9+10 — fix reversed Arabic names on certificates.
+    (function () {
+      var BUILD = '1.0.9+10';
+      var KEY = 'eng_hossam_build';
+      var previous = null;
+      try { previous = localStorage.getItem(KEY); } catch (e) {}
+
+      function wipeCaches() {
+        var tasks = [];
+        if ('serviceWorker' in navigator) {
+          tasks.push(
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+            })
+          );
+        }
+        if (window.caches && caches.keys) {
+          tasks.push(
+            caches.keys().then(function (keys) {
+              return Promise.all(keys.map(function (key) { return caches.delete(key); }));
+            })
+          );
+        }
+        return Promise.all(tasks);
+      }
+
+      function bootFlutter() {
+        var s = document.createElement('script');
+        s.src = 'flutter_bootstrap.js?v=' + encodeURIComponent(BUILD);
+        s.async = true;
+        document.body.appendChild(s);
+      }
+
+      wipeCaches().then(function () {
+        try { localStorage.setItem(KEY, BUILD); } catch (e) {}
+        // Older build stamp → one hard navigation so fresh assets load.
+        if (previous && previous !== BUILD) {
+          var url = new URL(window.location.href);
+          if (url.searchParams.get('_v') !== BUILD) {
+            url.searchParams.set('_v', BUILD);
+            window.location.replace(url.toString());
+            return;
+          }
+        }
+        bootFlutter();
+      }).catch(function () {
+        bootFlutter();
+      });
+    })();
+  </script>
+</head>
+<body>
+</body>
+</html>

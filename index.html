@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <base href="/eng-hossam/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="بشمهندس حسام — جلسة افتتاح دورة البرمجة في أكاديمية GLC بالسويس (شارع الكورنيش الجديد - منتجع الواتر واي) من ٦ إلى ٨ مساءً لطلاب الأول والثاني الثانوي. احجز مكانك الآن.">
+  <meta name="theme-color" content="#0B1120">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Eng. Hossam">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>Eng. Hossam · بشمهندس حسام</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { margin: 0; height: 100%; background: #0B1120; }
+  </style>
+</head>
+<body>
+  <script>
+    // Safari can hang forever on serviceWorker.getRegistrations() / caches.keys().
+    // Never block Flutter boot on cache wipe. Build stamp: 1.0.10+11
+    (function () {
+      var BUILD = '1.0.10+11';
+      var KEY = 'eng_hossam_build';
+      var booted = false;
+
+      function bootFlutter() {
+        if (booted) return;
+        booted = true;
+        var s = document.createElement('script');
+        s.src = 'flutter_bootstrap.js?v=' + encodeURIComponent(BUILD);
+        s.async = true;
+        document.body.appendChild(s);
+      }
+
+      function wipeCaches() {
+        var tasks = [];
+        try {
+          if ('serviceWorker' in navigator) {
+            tasks.push(
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+              })
+            );
+          }
+        } catch (e) {}
+        try {
+          if (window.caches && caches.keys) {
+            tasks.push(
+              caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (key) { return caches.delete(key); }));
+              })
+            );
+          }
+        } catch (e) {}
+        return Promise.all(tasks);
+      }
+
+      var previous = null;
+      try { previous = localStorage.getItem(KEY); } catch (e) {}
+
+      // Hard timeout so Safari never leaves a blank page.
+      setTimeout(bootFlutter, 1200);
+
+      wipeCaches().then(function () {
+        try { localStorage.setItem(KEY, BUILD); } catch (e) {}
+        if (previous && previous !== BUILD) {
+          var url = new URL(window.location.href);
+          if (url.searchParams.get('_v') !== BUILD) {
+            url.searchParams.set('_v', BUILD);
+            window.location.replace(url.toString());
+            return;
+          }
+        }
+        bootFlutter();
+      }).catch(function () {
+        bootFlutter();
+      });
+    })();
+  </script>
+</body>
+</html>
