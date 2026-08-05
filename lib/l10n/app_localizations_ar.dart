@@ -320,7 +320,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get registrationIdLabel => 'رقم التسجيل';
 
   @override
-  String get saveIdHint => 'احفظ الرقم ده لو حابب تحمّل شهادتك بعدين.';
+  String get saveIdHint =>
+      'احفظ الرقم ده عشان تحمّل شهادتك دلوقتي أو في أي وقت.';
 
   @override
   String get backHome => 'العودة للرئيسية';
@@ -345,7 +346,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get certificateTitle => 'حمّل شهادتك';
 
   @override
-  String get certificateSubtitle => 'اكتب رقم الموبايل أو رقم التسجيل.';
+  String get certificateSubtitle =>
+      'اكتب رقم الموبايل أو رقم التسجيل — الشهادة جاهزة فور التسجيل.';
 
   @override
   String get certificateQueryHint => 'رقم الموبايل أو رقم التسجيل';
@@ -360,7 +362,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get certNotFound => 'مفيش تسجيل بالبيانات دي. راجع الرقم.';
 
   @override
-  String get certPending => 'شهادتك لسه مش جاهزة — هتتوفر بعد اعتماد الحضور.';
+  String get certPending =>
+      'سجّل باسمك ورقم موبايلك أولًا، وبعدها تقدر تحمّل الشهادة فورًا.';
 
   @override
   String get certOfAttendance => 'شهادة حضور';
@@ -425,7 +428,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get faqA3 =>
-      'أيوه — شهادة حضور تقدر تحمّلها من الموقع بعد اعتماد الحضور.';
+      'أيوه — شهادة جاهزة فور ما تسجّل، تحمّلها من صفحة الشهادة برقم موبايلك.';
 
   @override
   String get faqQ4 => 'الجلسة قد إيه؟';
@@ -623,7 +626,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get journeyCertTitle => 'استلام الشهادة';
 
   @override
-  String get journeyCertDesc => 'بعد الحضور تقدر تحمّل شهادة حضورك.';
+  String get journeyCertDesc =>
+      'شهادتك جاهزة فور التسجيل — حمّلها برقم موبايلك.';
 
   @override
   String get journeyCertCurrentDesc => 'شهادتك جاهزة — حمّلها الآن.';
@@ -655,8 +659,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get registerSuccessLine2 => 'نتطلع لرؤيتك قريبًا.';
 
   @override
-  String get attendCongrats =>
-      'مبروك! تم تأكيد حضورك. استلم شهادتك الآن وكمل رحلتك.';
+  String get attendCongrats => 'تم تسجيلك بنجاح. شهادتك جاهزة للتحميل دلوقتي.';
 
   @override
   String get trackJourney => 'تابع رحلتك';

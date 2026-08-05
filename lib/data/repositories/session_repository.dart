@@ -108,6 +108,7 @@ class SessionRepository {
     final short = doc.id.length >= 4
         ? doc.id.substring(0, 4).toUpperCase()
         : doc.id.toUpperCase();
+    final now = DateTime.now();
     final entry = Registration(
       id: doc.id,
       registrationId: 'REG-2026-$short',
@@ -117,8 +118,10 @@ class SessionRepository {
       grade: grade.trim(),
       sessionId: official.id,
       sessionLabel: official.displayLabel(true),
-      createdAt: DateTime.now(),
+      createdAt: now,
       city: official.cityKey,
+      certificateIssued: true,
+      certificateIssuedAt: now,
     );
     await doc.set(entry.toMap());
     // Keep admin list (SessionStore) in sync with Firestore writes.
@@ -245,9 +248,12 @@ class SessionRepository {
       _store.markCertificateDownloaded(id);
       return;
     }
+    final now = DateTime.now().toIso8601String();
     await _firestore!.collection(_regsCollection).doc(id).update({
+      'certificateIssued': true,
+      'certificateIssuedAt': now,
       'certificateDownloaded': true,
-      'certificateDownloadedAt': DateTime.now().toIso8601String(),
+      'certificateDownloadedAt': now,
     });
     _store.markCertificateDownloaded(id);
   }

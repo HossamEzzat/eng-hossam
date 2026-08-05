@@ -275,8 +275,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           alignment: WrapAlignment.center,
           children: [
             GradientButton(
+              label: l10n.downloadPdf,
+              icon: Icons.workspace_premium_outlined,
+              onPressed: () => context.go(
+                '/certificate?q=${Uri.encodeComponent(live.mobile)}',
+              ),
+            ),
+            GradientButton(
               label: l10n.addReviewCta,
               icon: Icons.star_rounded,
+              variant: GradientButtonVariant.secondary,
               onPressed: () => context.go(
                 '/reviews?mobile=${Uri.encodeComponent(live.mobile)}'
                 '&name=${Uri.encodeComponent(live.fullName)}',

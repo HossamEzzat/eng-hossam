@@ -242,6 +242,8 @@ class SessionStore extends ChangeNotifier {
       sessionLabel: session.displayLabel(true),
       createdAt: DateTime.now(),
       city: session.cityKey,
+      certificateIssued: true,
+      certificateIssuedAt: DateTime.now(),
     );
     registrations.insert(0, entry);
     final i = sessions.indexWhere((s) => s.id == session.id);
@@ -355,7 +357,6 @@ class SessionStore extends ChangeNotifier {
     final i = registrations.indexWhere((r) => r.id == id);
     if (i < 0) return;
     final r = registrations[i];
-    if (issued && !r.attendanceConfirmed) return;
     if (issued) {
       registrations[i] = r.copyWith(
         certificateIssued: true,
@@ -378,7 +379,6 @@ class SessionStore extends ChangeNotifier {
       final i = registrations.indexWhere((r) => r.id == id);
       if (i < 0) continue;
       final r = registrations[i];
-      if (issued && !r.attendanceConfirmed) continue;
       if (issued) {
         registrations[i] = r.copyWith(
           certificateIssued: true,
@@ -411,8 +411,10 @@ class SessionStore extends ChangeNotifier {
     final i = registrations.indexWhere((r) => r.id == id);
     if (i < 0) return;
     final r = registrations[i];
-    if (!r.certificateIssued) return;
     registrations[i] = r.copyWith(
+      // Auto-issue if missing so older registrations can still download.
+      certificateIssued: true,
+      certificateIssuedAt: r.certificateIssuedAt ?? DateTime.now(),
       certificateDownloaded: true,
       certificateDownloadedAt: DateTime.now(),
     );

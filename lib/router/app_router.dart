@@ -97,10 +97,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/certificate',
-        pageBuilder: (context, state) => buildFadeSlidePage(
-          state: state,
-          child: const CertificatePage(),
-        ),
+        pageBuilder: (context, state) {
+          final q = state.uri.queryParameters['q'];
+          return buildFadeSlidePage(
+            state: state,
+            child: CertificatePage(initialQuery: q),
+          );
+        },
       ),
       GoRoute(
         path: '/journey',

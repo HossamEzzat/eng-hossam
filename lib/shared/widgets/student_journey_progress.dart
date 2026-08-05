@@ -107,7 +107,7 @@ class StudentJourneyProgress extends StatelessWidget {
       case JourneyMilestone.certificate:
         return [
           Text(
-            l10n.attendCongrats,
+            l10n.journeyCertCurrentDesc,
             textAlign: TextAlign.center,
             style: context.textTheme.bodyMedium?.copyWith(
               color: AppColors.textSoft,
@@ -118,7 +118,9 @@ class StudentJourneyProgress extends StatelessWidget {
           GradientButton(
             label: l10n.certificateTitle,
             icon: Icons.workspace_premium_outlined,
-            onPressed: () => context.go('/certificate'),
+            onPressed: () => context.go(
+              '/certificate?q=${Uri.encodeComponent(registration.mobile)}',
+            ),
           ),
           ...reviewBtn,
         ];

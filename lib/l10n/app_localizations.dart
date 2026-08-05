@@ -695,7 +695,7 @@ abstract class AppLocalizations {
   /// No description provided for @saveIdHint.
   ///
   /// In ar, this message translates to:
-  /// **'احفظ الرقم ده لو حابب تحمّل شهادتك بعدين.'**
+  /// **'احفظ الرقم ده عشان تحمّل شهادتك دلوقتي أو في أي وقت.'**
   String get saveIdHint;
 
   /// No description provided for @backHome.
@@ -743,7 +743,7 @@ abstract class AppLocalizations {
   /// No description provided for @certificateSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'اكتب رقم الموبايل أو رقم التسجيل.'**
+  /// **'اكتب رقم الموبايل أو رقم التسجيل — الشهادة جاهزة فور التسجيل.'**
   String get certificateSubtitle;
 
   /// No description provided for @certificateQueryHint.
@@ -773,7 +773,7 @@ abstract class AppLocalizations {
   /// No description provided for @certPending.
   ///
   /// In ar, this message translates to:
-  /// **'شهادتك لسه مش جاهزة — هتتوفر بعد اعتماد الحضور.'**
+  /// **'سجّل باسمك ورقم موبايلك أولًا، وبعدها تقدر تحمّل الشهادة فورًا.'**
   String get certPending;
 
   /// No description provided for @certOfAttendance.
@@ -899,7 +899,7 @@ abstract class AppLocalizations {
   /// No description provided for @faqA3.
   ///
   /// In ar, this message translates to:
-  /// **'أيوه — شهادة حضور تقدر تحمّلها من الموقع بعد اعتماد الحضور.'**
+  /// **'أيوه — شهادة جاهزة فور ما تسجّل، تحمّلها من صفحة الشهادة برقم موبايلك.'**
   String get faqA3;
 
   /// No description provided for @faqQ4.
@@ -1283,7 +1283,7 @@ abstract class AppLocalizations {
   /// No description provided for @journeyCertDesc.
   ///
   /// In ar, this message translates to:
-  /// **'بعد الحضور تقدر تحمّل شهادة حضورك.'**
+  /// **'شهادتك جاهزة فور التسجيل — حمّلها برقم موبايلك.'**
   String get journeyCertDesc;
 
   /// No description provided for @journeyCertCurrentDesc.
@@ -1343,7 +1343,7 @@ abstract class AppLocalizations {
   /// No description provided for @attendCongrats.
   ///
   /// In ar, this message translates to:
-  /// **'مبروك! تم تأكيد حضورك. استلم شهادتك الآن وكمل رحلتك.'**
+  /// **'تم تسجيلك بنجاح. شهادتك جاهزة للتحميل دلوقتي.'**
   String get attendCongrats;
 
   /// No description provided for @trackJourney.

@@ -53,7 +53,8 @@ class StudentJourney {
         return JourneyStepVisual.locked;
       case JourneyMilestone.certificate:
         if (certificateDownloaded) return JourneyStepVisual.completed;
-        if (certificateIssued) return JourneyStepVisual.current;
+        // Available immediately after registration — no attendance wait.
+        if (registrationCompleted) return JourneyStepVisual.current;
         return JourneyStepVisual.locked;
       case JourneyMilestone.review:
         if (reviewSubmitted) return JourneyStepVisual.completed;
@@ -67,10 +68,7 @@ class StudentJourney {
 
   JourneyMilestone get currentMilestone {
     if (!registrationCompleted) return JourneyMilestone.registered;
-    if (!attendanceConfirmed) return JourneyMilestone.attended;
-    if (!certificateIssued || !certificateDownloaded) {
-      return JourneyMilestone.certificate;
-    }
+    if (!certificateDownloaded) return JourneyMilestone.certificate;
     if (!reviewSubmitted) return JourneyMilestone.review;
     return JourneyMilestone.completed;
   }

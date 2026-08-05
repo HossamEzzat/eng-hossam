@@ -323,7 +323,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveIdHint =>
-      'Save this ID if you want to download your certificate later.';
+      'Save this ID to download your certificate now or anytime.';
 
   @override
   String get backHome => 'Back to home';
@@ -349,7 +349,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get certificateSubtitle =>
-      'Enter your mobile number or registration ID.';
+      'Enter your mobile or registration ID — ready right after you register.';
 
   @override
   String get certificateQueryHint => 'Mobile number or registration ID';
@@ -365,7 +365,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get certPending =>
-      'Your certificate isn’t ready yet — available after attendance approval.';
+      'Register with your name and mobile first, then you can download instantly.';
 
   @override
   String get certOfAttendance => 'Certificate of Attendance';
@@ -432,7 +432,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqA3 =>
-      'Yes — an attendance certificate you can download after approval.';
+      'Yes — your certificate is ready as soon as you register. Download it from the Certificate page with your mobile number.';
 
   @override
   String get faqQ4 => 'How long is the session?';
@@ -636,7 +636,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get journeyCertDesc =>
-      'After attendance you can download your certificate.';
+      'Your certificate is ready right after registration — download with your mobile number.';
 
   @override
   String get journeyCertCurrentDesc =>
@@ -672,7 +672,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attendCongrats =>
-      'Congrats! Attendance confirmed. Download your certificate and continue your journey.';
+      'You’re registered. Your certificate is ready to download now.';
 
   @override
   String get trackJourney => 'Track your journey';

@@ -17,17 +17,28 @@ import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 
 class CertificatePage extends ConsumerStatefulWidget {
-  const CertificatePage({super.key});
+  const CertificatePage({super.key, this.initialQuery});
+
+  final String? initialQuery;
 
   @override
   ConsumerState<CertificatePage> createState() => _CertificatePageState();
 }
 
 class _CertificatePageState extends ConsumerState<CertificatePage> {
-  final _query = TextEditingController();
+  late final TextEditingController _query;
   bool _loading = false;
   String? _lookedUpId;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _query = TextEditingController(text: widget.initialQuery ?? '');
+    if (widget.initialQuery != null && widget.initialQuery!.trim().isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _lookup());
+    }
+  }
 
   @override
   void dispose() {
@@ -154,8 +165,7 @@ class _CertificatePageState extends ConsumerState<CertificatePage> {
                 ],
                 if (showCert) ...[
                   const SizedBox(height: 24),
-                  if (result.certificateApproved &&
-                      !result.certificateDownloaded) ...[
+                  if (!result.certificateDownloaded) ...[
                     Text(
                       l10n.attendCongrats,
                       textAlign: TextAlign.center,

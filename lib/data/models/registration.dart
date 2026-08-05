@@ -57,9 +57,8 @@ class Registration {
   final String createdBy;
   final DateTime? lastUpdated;
 
-  /// Legacy alias used by certificate gate (attendance + issued).
-  bool get certificateApproved =>
-      attendanceConfirmed && certificateIssued;
+  /// Instant certificate: any registered student can download immediately.
+  bool get certificateApproved => true;
 
   String get attendanceStatus =>
       attendanceConfirmed ? 'attended' : 'pending';
@@ -67,7 +66,8 @@ class Registration {
   String get certificateStatus {
     if (certificateDownloaded) return 'downloaded';
     if (certificateIssued) return 'issued';
-    return 'not_issued';
+    // Eligible as soon as they register — even before the issued flag syncs.
+    return 'ready';
   }
 
   String get reviewStatus => reviewSubmitted ? 'submitted' : 'pending';
@@ -75,9 +75,8 @@ class Registration {
   String get journeyStatus {
     if (reviewSubmitted) return 'completed';
     if (certificateDownloaded) return 'review';
-    if (certificateIssued) return 'certificate';
-    if (attendanceConfirmed) return 'attended';
-    return 'registered';
+    // Certificate is available right after registration.
+    return 'certificate';
   }
 
   Registration copyWith({
