@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="بشمهندس حسام — جلسة افتتاح دورة البرمجة في أكاديمية GLC بالسويس (شارع الكورنيش الجديد - منتجع الواتر واي) من ٦ إلى ٨ مساءً لطلاب الأول والثاني الثانوي. احجز مكانك الآن.">
+  <meta name="theme-color" content="#0B1120">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Eng. Hossam">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>Eng. Hossam · بشمهندس حسام</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { margin: 0; height: 100%; background: #0B1120; color: #E2E8F0; font-family: system-ui, sans-serif; }
+    #boot { display:flex; align-items:center; justify-content:center; height:100%; text-align:center; padding:24px; }
+  </style>
+</head>
+<body>
+  <div id="boot">جاري تحديث الموقع…</div>
+  <script>
+    // Force clients off stale Flutter SW shells (e.g. stuck on 1.0.9+10).
+    // Build stamp: 1.0.15+16 — instant certificate, no attendance wait.
+    (function () {
+      var BUILD = '1.0.15+16';
+      var KEY = 'eng_hossam_build';
+      var booted = false;
+
+      function bootFlutter() {
+        if (booted) return;
+        booted = true;
+        var bootEl = document.getElementById('boot');
+        if (bootEl) bootEl.remove();
+        var s = document.createElement('script');
+        s.src = 'flutter_bootstrap.js?v=' + encodeURIComponent(BUILD);
+        s.async = true;
+        document.body.appendChild(s);
+      }
+
+      function wipeAll() {
+        var tasks = [];
+        try {
+          if ('serviceWorker' in navigator) {
+            // Install a one-shot kill-switch worker so older Flutter SW caches
+            // (stuck on 1.0.9) get replaced, cleared, then unregistered.
+            tasks.push(
+              navigator.serviceWorker
+                .register('flutter_service_worker.js?v=' + encodeURIComponent(BUILD))
+                .catch(function () { return null; })
+                .then(function () {
+                  return navigator.serviceWorker.getRegistrations().then(function (regs) {
+                    return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+                  });
+                })
+            );
+          }
+        } catch (e) {}
+        try {
+          if (window.caches && caches.keys) {
+            tasks.push(
+              caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (key) { return caches.delete(key); }));
+              })
+            );
+          }
+        } catch (e) {}
+        try { localStorage.setItem(KEY, BUILD); } catch (e) {}
+        try { sessionStorage.clear(); } catch (e) {}
+        return Promise.all(tasks);
+      }
+
+      function needsUrlBump() {
+        try {
+          return new URL(window.location.href).searchParams.get('_v') !== BUILD;
+        } catch (e) {
+          return true;
+        }
+      }
+
+      function bumpUrlAndReload() {
+        try {
+          var url = new URL(window.location.href);
+          url.searchParams.set('_v', BUILD);
+          // Drop hash leftovers that old shells used.
+          url.hash = '';
+          window.location.replace(url.toString());
+        } catch (e) {
+          bootFlutter();
+        }
+      }
+
+      // Always land on the current build stamp in the URL so old ?_v=1.0.9+10
+      // bookmarks cannot keep serving a stale shell.
+      wipeAll().then(function () {
+        if (needsUrlBump()) {
+          bumpUrlAndReload();
+          return;
+        }
+        bootFlutter();
+      }).catch(function () {
+        if (needsUrlBump()) {
+          bumpUrlAndReload();
+          return;
+        }
+        bootFlutter();
+      });
+
+      // Failsafe boot if wipe hangs (Safari).
+      setTimeout(function () {
+        if (needsUrlBump()) {
+          bumpUrlAndReload();
+          return;
+        }
+        bootFlutter();
+      }, 1500);
+    })();
+  </script>
+</body>
+</html>
