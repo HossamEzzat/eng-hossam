@@ -16,10 +16,17 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
   GoogleFonts.config.allowRuntimeFetching = true;
-  await bootstrapFirebase();
+  // Never leave Safari on a blank page if IndexedDB / Firebase hangs.
+  await bootstrapFirebase().timeout(
+    const Duration(seconds: 6),
+    onTimeout: () {},
+  );
   // Load registrations/reviews from browser localStorage before UI paints,
   // so admin sees real students (not only the old in-memory demo seeds).
-  await SessionStore.instance.hydrate();
+  await SessionStore.instance.hydrate().timeout(
+    const Duration(seconds: 4),
+    onTimeout: () {},
+  );
   // When Firebase is on, overwrite local cache with Firestore (cross-device).
   // Timeout so a slow/blocked Firestore never leaves a blank first paint.
   if (AppConstants.useFirebase) {
