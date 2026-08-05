@@ -221,7 +221,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reviewsSubtitle =>
-      'Real feedback from students who attended — never fabricated.';
+      'Rate with stars and share your opinion — just your name and mobile.';
 
   @override
   String get reviewsCta => 'See all reviews';
@@ -273,7 +273,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerTitle => 'Reserve your seat now';
 
   @override
-  String get registerSubtitle => 'Registration takes under 30 seconds.';
+  String get registerSubtitle =>
+      'Just your name and mobile number — that’s it.';
 
   @override
   String get fieldFullName => 'Full name';
@@ -309,7 +310,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionRegionSuez => 'Suez';
 
   @override
-  String get submitRegister => 'Confirm registration';
+  String get submitRegister => 'Confirm booking';
 
   @override
   String get registerSuccessTitle => 'Registration successful 🎉';
@@ -321,7 +322,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registrationIdLabel => 'Registration ID';
 
   @override
-  String get saveIdHint => 'Save this ID to download your certificate later.';
+  String get saveIdHint =>
+      'Save this ID if you want to download your certificate later.';
 
   @override
   String get backHome => 'Back to home';
@@ -330,7 +332,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get validateName => 'Enter your full name';
 
   @override
-  String get validateMobile => 'Enter a valid Egyptian mobile (01xxxxxxxxx)';
+  String get validateMobile =>
+      'Enter a valid Egyptian mobile starting with 010, 011, 012, or 015';
 
   @override
   String get validateSchool => 'Enter your school name';
@@ -349,7 +352,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter your mobile number or registration ID.';
 
   @override
-  String get certificateQueryHint => 'e.g. 01012345678 or REG-2026-1001';
+  String get certificateQueryHint => 'Mobile number or registration ID';
 
   @override
   String get findCertificate => 'Find certificate';
@@ -383,23 +386,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get certRegId => 'Registration ID';
 
   @override
-  String get reviewsPageTitle => 'Share your feedback';
+  String get reviewsPageTitle => 'Rate the session';
 
   @override
   String get reviewsPageSubtitle =>
-      'Your words help us improve the next cohort.';
+      'Stars + your opinion — name and mobile only.';
 
   @override
-  String get ratingLabel => 'Rating';
+  String get ratingLabel => 'Star rating';
 
   @override
-  String get commentLabel => 'Comment';
+  String get commentLabel => 'Your opinion';
 
   @override
   String get suggestionsLabel => 'Suggestions (optional)';
 
   @override
-  String get submitReview => 'Submit review';
+  String get submitReview => 'Submit rating';
 
   @override
   String get thanksFeedback => 'Thank you for your feedback ❤️';
@@ -553,27 +556,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reviewsEmptySubtitle =>
-      'Be the first to share your experience after attending the session.';
+      'Be the first to rate — name, mobile, stars, and your opinion.';
 
   @override
-  String get addReviewCta => '⭐ Add your review';
+  String get addReviewCta => '⭐ Rate the session';
 
   @override
-  String get shareExperience => 'Share your experience';
+  String get shareExperience => 'Share your opinion';
 
   @override
-  String get reviewLockedTitle => 'Reviews unlock after your journey';
+  String get reviewLockedTitle => 'Rate the session easily';
 
   @override
   String get reviewLockedBody =>
-      'Register, attend the session, and download your certificate first — then you can share honest feedback.';
+      'Enter your name and mobile, pick stars, and write your opinion.';
 
   @override
-  String get reviewUnlockCta => 'Track your journey';
+  String get reviewUnlockCta => 'Start rating';
 
   @override
-  String get reviewNotEligible =>
-      'You can only submit a review after downloading your attendance certificate.';
+  String get reviewNotEligible => 'Check your name and mobile, then try again.';
+
+  @override
+  String get reviewAlreadySubmitted =>
+      'You already submitted a rating — thank you!';
+
+  @override
+  String get reviewFormHint => 'Name + mobile + stars + opinion. That’s all.';
 
   @override
   String get afterCertificateNudge =>

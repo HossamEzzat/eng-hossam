@@ -66,22 +66,11 @@ Guarded by GoRouter + `AuthService`:
 
 ## Firebase Auth mode (production)
 
-### One-time setup
+See **[`docs/FIREBASE.md`](FIREBASE.md)** (project `eng-hossam-app`).
 
-```bash
-dart pub global activate flutterfire_cli
-firebase login
-flutterfire configure
-# Enable Email/Password in Firebase Console
-# In app_constants.dart: useFirebase = true
-firebase deploy --only firestore:rules,storage
-```
-
-Then set `adminAuthRepositoryProvider` to return `FirebaseAdminAuthRepository()` (already wired when `useFirebase` is true).
-
-### First admin (Firebase)
-
-Use Firebase Console to create the Auth user and Firestore `admins/{uid}` document. Local/static mode does not use `/admin/setup` bootstrap.
+Today:
+- `useFirebase = true` → registrations live in Firestore
+- `useFirebaseAuth = false` → admin still uses `admin_auth_config.dart` until you enable Email/Password in Console and set `useFirebaseAuth = true`
 
 ---
 

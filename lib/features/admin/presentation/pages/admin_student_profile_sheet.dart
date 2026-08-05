@@ -113,23 +113,35 @@ class AdminStudentProfileSheet extends ConsumerWidget {
               runSpacing: 8,
               children: [
                 FilledButton(
-                  onPressed: () {
-                    store.setAttendance(r.id, attended: true);
-                    adminSnack(context, 'Marked attended');
+                  onPressed: () async {
+                    await ref
+                        .read(sessionRepositoryProvider)
+                        .setAttendance(r.id, attended: true);
+                    if (context.mounted) {
+                      adminSnack(context, 'Marked attended');
+                    }
                   },
                   child: const Text('Mark attended'),
                 ),
                 FilledButton.tonal(
-                  onPressed: () {
-                    store.setCertificateIssued(r.id, issued: true);
-                    adminSnack(context, 'Certificate published');
+                  onPressed: () async {
+                    await ref
+                        .read(sessionRepositoryProvider)
+                        .setCertificateIssued(r.id, issued: true);
+                    if (context.mounted) {
+                      adminSnack(context, 'Certificate published');
+                    }
                   },
                   child: const Text('Publish certificate'),
                 ),
                 FilledButton.tonal(
-                  onPressed: () {
-                    store.setCertificateIssued(r.id, issued: false);
-                    adminSnack(context, 'Certificate unpublished');
+                  onPressed: () async {
+                    await ref
+                        .read(sessionRepositoryProvider)
+                        .setCertificateIssued(r.id, issued: false);
+                    if (context.mounted) {
+                      adminSnack(context, 'Certificate unpublished');
+                    }
                   },
                   child: const Text('Unpublish'),
                 ),

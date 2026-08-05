@@ -1,22 +1,59 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:lumina/data/models/admin_models.dart';
 import 'package:lumina/data/models/opening_session.dart';
 import 'package:lumina/data/models/registration.dart';
 import 'package:lumina/data/models/review.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+/// In-memory session/registration store with local persistence.
+///
+/// On static GitHub Pages (Firebase off), data lives in the browser's
+/// SharedPreferences / localStorage for **this origin + browser only**.
+/// Registrations from other phones/browsers are never received here.
 class SessionStore extends ChangeNotifier {
   SessionStore._() {
-    _seed();
+    syncOfficialFromCatalog();
   }
 
   static final SessionStore instance = SessionStore._();
   final _uuid = const Uuid();
 
+  static const _regsKey = 'eng_hossam_registrations_v1';
+  static const _reviewsKey = 'eng_hossam_reviews_v1';
+  static const _sessionMetaKey = 'eng_hossam_session_meta_v1';
+
+  /// Older / exploratory keys — read once for migration if present.
+  static const _legacyRegKeys = [
+    'eng_hossam_registrations',
+    'lumina_registrations',
+    'registrations',
+    'session_registrations',
+    'students',
+  ];
+
   final List<OpeningSession> sessions =
       List<OpeningSession>.from(SessionCatalog.upcoming);
   final List<Registration> registrations = [];
   final List<Review> reviews = [];
+
+  bool _hydrated = false;
+  bool get isHydrated => _hydrated;
+  Future<void>? _persistFuture;
+
+  /// Wait until the latest localStorage write finishes (tests / cold start).
+  Future<void> ensurePersisted() async {
+    final pending = _persistFuture;
+    if (pending != null) await pending;
+  }
+
+  /// Official GLC session from the in-memory list (catalog-seeded / date-locked).
+  OpeningSession get officialSession {
+    final i = sessions.indexWhere((s) => s.id == SessionCatalog.officialId);
+    return i >= 0 ? sessions[i] : SessionCatalog.official;
+  }
 
   /// Singleton store is shared across the app and Riverpod containers.
   /// Riverpod's ChangeNotifierProvider would otherwise permanently dispose it
@@ -25,47 +62,113 @@ class SessionStore extends ChangeNotifier {
   // ignore: must_call_super
   void dispose() {}
 
-  /// Reviews list starts empty by design.
-  /// Never seed, invent, or hardcode testimonials.
-  void _seed() {
-    final now = DateTime.now();
-    final official = SessionCatalog.official;
-    registrations.addAll([
-      Registration(
-        id: 'seed_1',
-        registrationId: 'REG-2026-1001',
-        fullName: 'يوسف علي',
-        mobile: '01012345678',
-        schoolName: 'مدرسة السويس الثانوية',
-        grade: 'الصف الأول الثانوي',
-        sessionId: official.id,
-        sessionLabel: official.displayLabel(true),
-        createdAt: now.subtract(const Duration(days: 2)),
-        city: 'suez',
-        attendanceConfirmed: true,
-        attendanceDate: now.subtract(const Duration(days: 1)),
-        certificateIssued: true,
-        certificateIssuedAt: now.subtract(const Duration(days: 1)),
-      ),
-      Registration(
-        id: 'seed_2',
-        registrationId: 'REG-2026-1002',
-        fullName: 'سارة محمد',
-        mobile: '01098765432',
-        schoolName: 'مدرسة السويس الثانوية',
-        grade: 'الصف الثاني الثانوي',
-        sessionId: official.id,
-        sessionLabel: official.displayLabel(true),
-        createdAt: now.subtract(const Duration(days: 1)),
-        city: 'suez',
-      ),
-    ]);
+  /// Force official session schedule fields from [SessionCatalog] so a stale
+  /// in-memory admin edit (or future persistence) cannot show the wrong date.
+  void syncOfficialFromCatalog() {
+    final catalog = SessionCatalog.official;
+    final i = sessions.indexWhere((s) => s.id == SessionCatalog.officialId);
+    if (i < 0) {
+      sessions
+        ..clear()
+        ..add(catalog);
+      return;
+    }
+    final current = sessions[i];
+    final seatsTaken = current.totalSeats - current.remainingSeats;
+    sessions[i] = catalog.copyWith(
+      remainingSeats:
+          (catalog.totalSeats - seatsTaken).clamp(0, catalog.totalSeats),
+      registrationOpen: current.registrationOpen,
+    );
   }
 
-  /// Inflated for public marketing only — never use in admin.
-  int get displaySocialProofRegistered => registrations.length + 248;
+  /// Load persisted registrations/reviews (and migrate legacy keys / session IDs).
+  /// Call once from [main] before [runApp]. Demo seed students are NOT loaded.
+  Future<void> hydrate({bool force = false}) async {
+    await ensurePersisted();
+    if (_hydrated && !force) return;
+    syncOfficialFromCatalog();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final loaded = <Registration>[];
+
+      final primary = prefs.getString(_regsKey);
+      if (primary != null && primary.isNotEmpty) {
+        loaded.addAll(_decodeRegistrations(primary));
+      }
+
+      // Migrate any leftover keys so existing browser data is not lost.
+      for (final key in _legacyRegKeys) {
+        final raw = prefs.getString(key);
+        if (raw == null || raw.isEmpty) continue;
+        for (final r in _decodeRegistrations(raw)) {
+          if (!loaded.any((e) => e.id == r.id || e.registrationId == r.registrationId)) {
+            loaded.add(r);
+          }
+        }
+        await prefs.remove(key);
+      }
+
+      // Also scan for any other key that looks like a registration JSON list.
+      for (final key in prefs.getKeys()) {
+        if (key == _regsKey || _legacyRegKeys.contains(key)) continue;
+        final lower = key.toLowerCase();
+        if (!lower.contains('regist') && !lower.contains('student')) continue;
+        final raw = prefs.getString(key);
+        if (raw == null || raw.isEmpty || !raw.trimLeft().startsWith('[')) {
+          continue;
+        }
+        for (final r in _decodeRegistrations(raw)) {
+          if (!loaded.any((e) => e.id == r.id || e.registrationId == r.registrationId)) {
+            loaded.add(r);
+          }
+        }
+      }
+
+      final migrated = loaded.map(_migrateRegistration).toList();
+      migrated.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      registrations
+        ..clear()
+        ..addAll(migrated);
+
+      final reviewsRaw = prefs.getString(_reviewsKey);
+      if (reviewsRaw != null && reviewsRaw.isNotEmpty) {
+        reviews
+          ..clear()
+          ..addAll(_decodeReviews(reviewsRaw));
+      }
+
+      final metaRaw = prefs.getString(_sessionMetaKey);
+      if (metaRaw != null && metaRaw.isNotEmpty) {
+        _applySessionMeta(metaRaw);
+      }
+
+      _recomputeOfficialSeats();
+      await _persistAll();
+    } catch (e, st) {
+      debugPrint('SessionStore.hydrate failed: $e');
+      debugPrint('$st');
+    }
+    _hydrated = true;
+    notifyListeners();
+  }
+
+  /// Replace in-memory registrations (e.g. after a Firestore pull) and persist.
+  void replaceRegistrations(List<Registration> list) {
+    registrations
+      ..clear()
+      ..addAll(list.map(_migrateRegistration));
+    registrations.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    _recomputeOfficialSeats();
+    notifyListeners();
+    _persistAll();
+  }
+
+  /// Public marketing counts — real registrations only (no inflated demos).
+  int get displaySocialProofRegistered => registrations.length;
   int get displaySocialProofCertificates =>
-      registrations.where((r) => r.certificateIssued).length + 290;
+      registrations.where((r) => r.certificateIssued).length;
 
   int get registeredCount => registrations.length;
   int get certificatesIssuedCount =>
@@ -83,8 +186,8 @@ class SessionStore extends ChangeNotifier {
   Registration register({
     required String fullName,
     required String mobile,
-    required String schoolName,
-    required String grade,
+    String schoolName = '',
+    String grade = '',
     String? sessionId,
   }) {
     // Always assign the single official opening session.
@@ -99,6 +202,9 @@ class SessionStore extends ChangeNotifier {
     if (session.remainingSeats <= 0) {
       throw StateError('الجلسة دي امتلأت بالكامل.');
     }
+
+    final existing = findByMobileOrId(mobile.trim());
+    if (existing != null) return existing;
 
     final id = _uuid.v4();
     final regId =
@@ -122,7 +228,29 @@ class SessionStore extends ChangeNotifier {
           sessions[i].copyWith(remainingSeats: sessions[i].remainingSeats - 1);
     }
     notifyListeners();
+    _persistAll();
     return entry;
+  }
+
+  /// Insert a registration already saved elsewhere (e.g. Firestore) into the
+  /// local admin list without re-checking seats.
+  void adoptRegistration(Registration entry) {
+    final migrated = _migrateRegistration(entry);
+    final existing = registrations.indexWhere(
+      (r) => r.id == migrated.id || r.registrationId == migrated.registrationId,
+    );
+    if (existing >= 0) {
+      registrations[existing] = migrated;
+    } else {
+      registrations.insert(0, migrated);
+      final i = sessions.indexWhere((s) => s.id == migrated.sessionId);
+      if (i >= 0 && sessions[i].remainingSeats > 0) {
+        sessions[i] = sessions[i]
+            .copyWith(remainingSeats: sessions[i].remainingSeats - 1);
+      }
+    }
+    notifyListeners();
+    _persistAll();
   }
 
   Registration? findByMobileOrId(String query) {
@@ -166,12 +294,31 @@ class SessionStore extends ChangeNotifier {
       );
     }
     notifyListeners();
+    _persistAll();
   }
 
   void bulkSetAttendance(List<String> ids, {required bool attended}) {
     for (final id in ids) {
-      setAttendance(id, attended: attended);
+      final i = registrations.indexWhere((r) => r.id == id);
+      if (i < 0) continue;
+      if (attended) {
+        registrations[i] = registrations[i].copyWith(
+          attendanceConfirmed: true,
+          attendanceDate: DateTime.now(),
+        );
+      } else {
+        registrations[i] = registrations[i].copyWith(
+          attendanceConfirmed: false,
+          clearAttendanceDate: true,
+          certificateIssued: false,
+          clearCertificateIssuedAt: true,
+          certificateDownloaded: false,
+          clearCertificateDownloadedAt: true,
+        );
+      }
     }
+    notifyListeners();
+    _persistAll();
   }
 
   void markSessionAttended(String sessionId) {
@@ -201,12 +348,31 @@ class SessionStore extends ChangeNotifier {
       );
     }
     notifyListeners();
+    _persistAll();
   }
 
   void bulkSetCertificateIssued(List<String> ids, {required bool issued}) {
     for (final id in ids) {
-      setCertificateIssued(id, issued: issued);
+      final i = registrations.indexWhere((r) => r.id == id);
+      if (i < 0) continue;
+      final r = registrations[i];
+      if (issued && !r.attendanceConfirmed) continue;
+      if (issued) {
+        registrations[i] = r.copyWith(
+          certificateIssued: true,
+          certificateIssuedAt: DateTime.now(),
+        );
+      } else {
+        registrations[i] = r.copyWith(
+          certificateIssued: false,
+          clearCertificateIssuedAt: true,
+          certificateDownloaded: false,
+          clearCertificateDownloadedAt: true,
+        );
+      }
     }
+    notifyListeners();
+    _persistAll();
   }
 
   /// Legacy: approved = attended + certificate issued.
@@ -229,6 +395,7 @@ class SessionStore extends ChangeNotifier {
       certificateDownloadedAt: DateTime.now(),
     );
     notifyListeners();
+    _persistAll();
   }
 
   void markReviewSubmitted({
@@ -258,12 +425,13 @@ class SessionStore extends ChangeNotifier {
       reviewId: reviewId,
     );
     notifyListeners();
+    _persistAll();
   }
 
   Review addReview({
     required double rating,
     required String comment,
-    required String suggestions,
+    String suggestions = '',
     String? name,
     String? registrationId,
     String? mobile,
@@ -274,12 +442,6 @@ class SessionStore extends ChangeNotifier {
     );
     if (student == null) {
       throw StateError('Review requires a registered student.');
-    }
-    if (!student.attendanceConfirmed) {
-      throw StateError('Attend the session before reviewing.');
-    }
-    if (!student.certificateDownloaded) {
-      throw StateError('Download your certificate before reviewing.');
     }
     if (student.reviewSubmitted) {
       throw StateError('A review was already submitted for this student.');
@@ -307,6 +469,7 @@ class SessionStore extends ChangeNotifier {
       reviewId: entry.id,
     );
     notifyListeners();
+    _persistAll();
     return entry;
   }
 
@@ -326,11 +489,13 @@ class SessionStore extends ChangeNotifier {
     if (i < 0) return;
     reviews[i] = reviews[i].copyWith(status: status);
     notifyListeners();
+    _persistAll();
   }
 
   void deleteReview(String id) {
     reviews.removeWhere((r) => r.id == id);
     notifyListeners();
+    _persistAll();
   }
 
   void deleteRegistrations(List<String> ids) {
@@ -347,22 +512,52 @@ class SessionStore extends ChangeNotifier {
       }
     }
     notifyListeners();
+    _persistAll();
   }
 
   void upsertSession(OpeningSession session) {
-    final i = sessions.indexWhere((s) => s.id == session.id);
-    if (i < 0) {
-      sessions.add(session);
+    // Official opening schedule is owned by SessionCatalog — never accept a
+    // mutated date/labels for ses_glc_opening (keeps countdown correct).
+    final OpeningSession toSave;
+    if (session.id == SessionCatalog.officialId) {
+      final catalog = SessionCatalog.official;
+      toSave = catalog.copyWith(
+        titleAr: session.titleAr,
+        titleEn: session.titleEn,
+        totalSeats: session.totalSeats,
+        remainingSeats: session.remainingSeats,
+        venueAr: session.venueAr,
+        venueEn: session.venueEn,
+        academyAr: session.academyAr,
+        academyEn: session.academyEn,
+        addressAr: session.addressAr,
+        addressEn: session.addressEn,
+        courseAr: session.courseAr,
+        courseEn: session.courseEn,
+        audienceAr: session.audienceAr,
+        audienceEn: session.audienceEn,
+        registrationOpen: session.registrationOpen,
+        timeLabelAr: session.timeLabelAr,
+        timeLabelEn: session.timeLabelEn,
+      );
     } else {
-      sessions[i] = session;
+      toSave = session;
+    }
+    final i = sessions.indexWhere((s) => s.id == toSave.id);
+    if (i < 0) {
+      sessions.add(toSave);
+    } else {
+      sessions[i] = toSave;
     }
     notifyListeners();
+    _persistAll();
   }
 
   void deleteSession(String id) {
     if (registrations.any((r) => r.sessionId == id)) return;
     sessions.removeWhere((s) => s.id == id);
     notifyListeners();
+    _persistAll();
   }
 
   void setRegistrationOpen(String id, {required bool open}) {
@@ -370,6 +565,7 @@ class SessionStore extends ChangeNotifier {
     if (i < 0) return;
     sessions[i] = sessions[i].copyWith(registrationOpen: open);
     notifyListeners();
+    _persistAll();
   }
 
   AdminDashboardStats computeStats() {
@@ -431,5 +627,128 @@ class SessionStore extends ChangeNotifier {
       );
     }
     return buf.toString();
+  }
+
+  // --- persistence helpers -------------------------------------------------
+
+  Registration _migrateRegistration(Registration r) {
+    final official = SessionCatalog.official;
+    final needsSessionFix = r.sessionId.isEmpty ||
+        r.sessionId != SessionCatalog.officialId ||
+        r.sessionLabel.trim().isEmpty;
+    if (!needsSessionFix) return r;
+    return r.copyWith(
+      sessionId: SessionCatalog.officialId,
+      sessionLabel: r.sessionLabel.trim().isEmpty
+          ? official.displayLabel(true)
+          : r.sessionLabel,
+    );
+  }
+
+  void _recomputeOfficialSeats() {
+    final catalog = SessionCatalog.official;
+    final taken =
+        registrations.where((r) => r.sessionId == catalog.id).length;
+    final i = sessions.indexWhere((s) => s.id == catalog.id);
+    if (i < 0) return;
+    sessions[i] = sessions[i].copyWith(
+      remainingSeats: (catalog.totalSeats - taken).clamp(0, catalog.totalSeats),
+    );
+  }
+
+  List<Registration> _decodeRegistrations(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      final out = <Registration>[];
+      for (final item in decoded) {
+        if (item is! Map) continue;
+        final map = Map<String, dynamic>.from(item);
+        final id = map['id'] as String? ?? _uuid.v4();
+        try {
+          out.add(Registration.fromMap(id, map));
+        } catch (e) {
+          debugPrint('Skip bad registration: $e');
+        }
+      }
+      return out;
+    } catch (e) {
+      debugPrint('Failed to decode registrations: $e');
+      return const [];
+    }
+  }
+
+  List<Review> _decodeReviews(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      final out = <Review>[];
+      for (final item in decoded) {
+        if (item is! Map) continue;
+        final map = Map<String, dynamic>.from(item);
+        final id = map['id'] as String? ?? _uuid.v4();
+        try {
+          out.add(Review.fromMap(id, map));
+        } catch (e) {
+          debugPrint('Skip bad review: $e');
+        }
+      }
+      return out;
+    } catch (e) {
+      debugPrint('Failed to decode reviews: $e');
+      return const [];
+    }
+  }
+
+  void _applySessionMeta(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return;
+      final map = Map<String, dynamic>.from(decoded);
+      for (final e in map.entries) {
+        final i = sessions.indexWhere((s) => s.id == e.key);
+        if (i < 0 || e.value is! Map) continue;
+        final meta = Map<String, dynamic>.from(e.value as Map);
+        sessions[i] = sessions[i].copyWith(
+          remainingSeats: meta['remainingSeats'] as int? ??
+              sessions[i].remainingSeats,
+          registrationOpen: meta['registrationOpen'] as bool? ??
+              sessions[i].registrationOpen,
+        );
+      }
+    } catch (e) {
+      debugPrint('Failed to apply session meta: $e');
+    }
+  }
+
+  Future<void> _persistAll() {
+    final future = _writePersist();
+    _persistFuture = future;
+    return future;
+  }
+
+  Future<void> _writePersist() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final regsJson = jsonEncode([
+        for (final r in registrations) {'id': r.id, ...r.toMap()},
+      ]);
+      final reviewsJson = jsonEncode([
+        for (final r in reviews) {'id': r.id, ...r.toMap()},
+      ]);
+      final metaJson = jsonEncode({
+        for (final s in sessions)
+          s.id: {
+            'remainingSeats': s.remainingSeats,
+            'registrationOpen': s.registrationOpen,
+          },
+      });
+      await prefs.setString(_regsKey, regsJson);
+      await prefs.setString(_reviewsKey, reviewsJson);
+      await prefs.setString(_sessionMetaKey, metaJson);
+    } catch (e, st) {
+      debugPrint('SessionStore.persist failed: $e');
+      debugPrint('$st');
+    }
   }
 }

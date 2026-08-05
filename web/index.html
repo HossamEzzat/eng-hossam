@@ -20,22 +20,58 @@
     html, body { margin: 0; height: 100%; background: #0B1120; }
   </style>
   <script>
-    // Drop stale Flutter/PWA caches that keep serving the old multi-session UI.
+    // Drop stale Flutter/PWA caches that keep serving the old Sept-1 countdown.
+    // Build stamp: 1.0.9+10 — fix reversed Arabic names on certificates.
     (function () {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function (regs) {
-          regs.forEach(function (reg) { reg.unregister(); });
-        });
+      var BUILD = '1.0.9+10';
+      var KEY = 'eng_hossam_build';
+      var previous = null;
+      try { previous = localStorage.getItem(KEY); } catch (e) {}
+
+      function wipeCaches() {
+        var tasks = [];
+        if ('serviceWorker' in navigator) {
+          tasks.push(
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+            })
+          );
+        }
+        if (window.caches && caches.keys) {
+          tasks.push(
+            caches.keys().then(function (keys) {
+              return Promise.all(keys.map(function (key) { return caches.delete(key); }));
+            })
+          );
+        }
+        return Promise.all(tasks);
       }
-      if (window.caches && caches.keys) {
-        caches.keys().then(function (keys) {
-          keys.forEach(function (key) { caches.delete(key); });
-        });
+
+      function bootFlutter() {
+        var s = document.createElement('script');
+        s.src = 'flutter_bootstrap.js?v=' + encodeURIComponent(BUILD);
+        s.async = true;
+        document.body.appendChild(s);
       }
+
+      wipeCaches().then(function () {
+        try { localStorage.setItem(KEY, BUILD); } catch (e) {}
+        // Older build stamp → one hard navigation so fresh assets load.
+        if (previous && previous !== BUILD) {
+          var url = new URL(window.location.href);
+          if (url.searchParams.get('_v') !== BUILD) {
+            url.searchParams.set('_v', BUILD);
+            window.location.replace(url.toString());
+            return;
+          }
+        }
+        bootFlutter();
+      }).catch(function () {
+        bootFlutter();
+      });
     })();
   </script>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

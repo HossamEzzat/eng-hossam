@@ -21,9 +21,7 @@ class SessionPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(sessionStoreProvider);
-    final sessions = store.sessions.isNotEmpty
-        ? store.sessions
-        : SessionCatalog.upcoming;
+    final sessions = [store.officialSession];
     final wide = Responsive.isWide(context);
     final l10n = context.l10n;
 
@@ -177,13 +175,14 @@ class _TicketCardState extends State<_TicketCard> {
               const SizedBox(height: 10),
               _InfoRow(Icons.schedule_outlined, s.timeLabel(isAr)),
               const SizedBox(height: 10),
-              _InfoRow(Icons.place_outlined, s.address(isAr)),
-              const SizedBox(height: 10),
-              _InfoRow(Icons.groups_outlined, s.audience(isAr)),
+              _InfoRow(
+                Icons.place_outlined,
+                '${s.cityLabel(isAr)} · ${s.academy(isAr)}',
+              ),
               const SizedBox(height: 10),
               _InfoRow(
                 Icons.event_seat_outlined,
-                '${s.remainingSeats} ${l10n.seatsRemaining} · ${s.totalSeats}',
+                '${s.remainingSeats} ${l10n.seatsRemaining}',
                 emphasize: lowSeats,
               ),
               const SizedBox(height: 20),

@@ -12,7 +12,7 @@ import 'package:lumina/features/admin/data/notification_outbox.dart';
 
 /// Swap this provider to change auth backend without touching UI.
 final adminAuthRepositoryProvider = Provider<LoginRepository>((ref) {
-  if (AppConstants.useFirebase) {
+  if (AppConstants.useFirebase && AppConstants.useFirebaseAuth) {
     return FirebaseAdminAuthRepository();
   }
   return LocalDevAdminAuthRepository();

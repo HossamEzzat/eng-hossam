@@ -4,8 +4,8 @@ import 'package:lumina/shared/widgets/glass_card.dart';
 import 'package:lumina/shared/widgets/gradient_button.dart';
 import 'package:lumina/theme/app_colors.dart';
 
-/// Setup is unused for the single-owner local admin.
-/// Always send visitors to the login form.
+/// Setup is for Firebase Auth first-admin bootstrap only.
+/// With local admin auth, visitors are sent to the login form.
 class AdminSetupPage extends StatelessWidget {
   const AdminSetupPage({super.key});
 
@@ -32,8 +32,9 @@ class AdminSetupPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'This site has a single owner-admin account. '
-                    'There is no public signup. Sign in with your admin email and password.',
+                    'Create the owner admin in Firebase Console '
+                    '(Authentication → Users + Firestore admins/{uid}), '
+                    'then sign in. See docs/FIREBASE.md.',
                     style: TextStyle(color: AppColors.textSoft, height: 1.5),
                   ),
                   const SizedBox(height: 24),

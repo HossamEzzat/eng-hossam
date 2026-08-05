@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lumina/core/extensions/context_extensions.dart';
 import 'package:lumina/core/extensions/l10n_extensions.dart';
-import 'package:lumina/data/models/registration.dart';
 import 'package:lumina/data/models/review.dart';
 import 'package:lumina/data/repositories/providers.dart';
 import 'package:lumina/data/repositories/reviews_providers.dart';
@@ -14,75 +14,78 @@ import 'package:lumina/shared/widgets/glass_card.dart';
 import 'package:lumina/shared/widgets/gradient_button.dart';
 import 'package:lumina/theme/app_colors.dart';
 
-/// Public reviews page — never shows fabricated content.
-/// Form unlocks only after registration → attendance → certificate download.
+/// Public reviews — name + phone + stars + opinion. No fabricated content.
 class ReviewsPage extends ConsumerStatefulWidget {
-  const ReviewsPage({super.key, this.registrationId, this.mobile});
+  const ReviewsPage({super.key, this.registrationId, this.mobile, this.name});
 
   final String? registrationId;
   final String? mobile;
+  final String? name;
 
   @override
   ConsumerState<ReviewsPage> createState() => _ReviewsPageState();
 }
 
 class _ReviewsPageState extends ConsumerState<ReviewsPage> {
+  final _formKey = GlobalKey<FormState>();
   double _rating = 5;
   final _comment = TextEditingController();
-  final _suggestions = TextEditingController();
   final _name = TextEditingController();
+  final _mobile = TextEditingController();
   bool _loading = false;
-  bool _showForm = false;
+  bool _showForm = true;
 
   @override
   void initState() {
     super.initState();
-    _showForm = (widget.registrationId?.isNotEmpty ?? false) ||
-        (widget.mobile?.isNotEmpty ?? false);
+    if (widget.name?.isNotEmpty ?? false) {
+      _name.text = widget.name!;
+    }
+    if (widget.mobile?.isNotEmpty ?? false) {
+      _mobile.text = widget.mobile!;
+    }
   }
 
   @override
   void dispose() {
     _comment.dispose();
-    _suggestions.dispose();
     _name.dispose();
+    _mobile.dispose();
     super.dispose();
-  }
-
-  Registration? _eligibleStudent() {
-    final store = ref.read(sessionStoreProvider);
-    final q = widget.registrationId ?? widget.mobile;
-    if (q == null || q.trim().isEmpty) return null;
-    final student = store.findByMobileOrId(q);
-    if (student == null) return null;
-    if (!student.certificateDownloaded || student.reviewSubmitted) {
-      return null;
-    }
-    if (!student.attendanceConfirmed) return null;
-    return student;
   }
 
   Future<void> _submit() async {
     final l10n = context.l10n;
-    final eligible = _eligibleStudent();
-    if (eligible == null) {
-      context.showSnack(l10n.reviewNotEligible);
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
     if (_comment.text.trim().isEmpty) {
       context.showSnack(l10n.commentLabel);
       return;
     }
     setState(() => _loading = true);
     try {
-      await ref.read(sessionRepositoryProvider).submitReview(
-            rating: _rating,
-            comment: _comment.text,
-            suggestions: _suggestions.text,
-            name: _name.text.trim().isEmpty ? null : _name.text,
-            registrationId: eligible.registrationId,
-            mobile: eligible.mobile,
-          );
+      final repo = ref.read(sessionRepositoryProvider);
+      final mobile = _mobile.text.trim();
+      final name = _name.text.trim();
+
+      var student = await repo.findCertificate(mobile);
+      student ??= await repo.register(
+        fullName: name,
+        mobile: mobile,
+      );
+
+      if (student.reviewSubmitted) {
+        if (!mounted) return;
+        context.showSnack(l10n.reviewAlreadySubmitted);
+        return;
+      }
+
+      await repo.submitReview(
+        rating: _rating,
+        comment: _comment.text,
+        name: name,
+        registrationId: student.registrationId,
+        mobile: student.mobile,
+      );
       if (!mounted) return;
       context.go('/thank-you');
     } catch (e) {
@@ -99,7 +102,6 @@ class _ReviewsPageState extends ConsumerState<ReviewsPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final reviewsAsync = ref.watch(publicReviewsProvider);
-    final eligible = _eligibleStudent();
 
     return SiteShell(
       child: Padding(
@@ -112,7 +114,13 @@ class _ReviewsPageState extends ConsumerState<ReviewsPage> {
                 padding: EdgeInsets.symmetric(vertical: 80),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (_, _) => _emptyBlock(context),
+              error: (_, _) => Column(
+                children: [
+                  _emptyBlock(context),
+                  const SizedBox(height: 24),
+                  _buildForm(),
+                ],
+              ),
               data: (reviews) {
                 final hasReviews = reviews.isNotEmpty;
                 final avg = hasReviews
@@ -194,13 +202,31 @@ class _ReviewsPageState extends ConsumerState<ReviewsPage> {
                               .slideY(begin: 0.04),
                         );
                       }),
-                    if (eligible != null && _showForm) ...[
-                      const SizedBox(height: 24),
-                      _buildForm(),
-                    ] else if (hasReviews || _showForm) ...[
-                      const SizedBox(height: 24),
-                      _lockedOrCta(context, eligible != null),
-                    ],
+                    const SizedBox(height: 24),
+                    if (_showForm)
+                      _buildForm()
+                    else
+                      GlassCard(
+                        glow: true,
+                        child: Column(
+                          children: [
+                            Text(
+                              l10n.afterCertificateNudge,
+                              textAlign: TextAlign.center,
+                              style: context.textTheme.titleMedium?.copyWith(
+                                color: AppColors.text,
+                                height: 1.55,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            GradientButton(
+                              label: l10n.addReviewCta,
+                              onPressed: () =>
+                                  setState(() => _showForm = true),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 );
               },
@@ -218,156 +244,109 @@ class _ReviewsPageState extends ConsumerState<ReviewsPage> {
       title: l10n.reviewsEmptyTitle,
       subtitle: l10n.reviewsEmptySubtitle,
       actionLabel: l10n.addReviewCta,
-      onAction: () {
-        if (_eligibleStudent() != null) {
-          setState(() => _showForm = true);
-        } else {
-          context.go('/journey');
-        }
-      },
+      onAction: () => setState(() => _showForm = true),
       compact: true,
-    ).animate().fadeIn();
-  }
-
-  Widget _lockedOrCta(BuildContext context, bool canForm) {
-    final l10n = context.l10n;
-    if (canForm) {
-      return GlassCard(
-        glow: true,
-        child: Column(
-          children: [
-            Text(
-              l10n.afterCertificateNudge,
-              textAlign: TextAlign.center,
-              style: context.textTheme.titleMedium?.copyWith(
-                color: AppColors.text,
-                height: 1.55,
-              ),
-            ),
-            const SizedBox(height: 16),
-            GradientButton(
-              label: l10n.addReviewCta,
-              onPressed: () => setState(() => _showForm = true),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return GlassCard(
-      child: Column(
-        children: [
-          Text(
-            l10n.reviewLockedTitle,
-            textAlign: TextAlign.center,
-            style: context.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: AppColors.text,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            l10n.reviewLockedBody,
-            textAlign: TextAlign.center,
-            style: context.textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSoft,
-              height: 1.55,
-            ),
-          ),
-          const SizedBox(height: 20),
-          GradientButton(
-            label: l10n.addReviewCta,
-            onPressed: () => context.go('/journey'),
-          ),
-          const SizedBox(height: 10),
-          TextButton(
-            onPressed: () => context.go('/journey'),
-            child: Text(l10n.reviewUnlockCta),
-          ),
-        ],
-      ),
     ).animate().fadeIn();
   }
 
   Widget _buildForm() {
     final l10n = context.l10n;
     return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.addReviewCta,
-            style: context.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: AppColors.text,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.addReviewCta,
+              style: context.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: AppColors.text,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.afterCertificateNudge,
-            style: context.textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSoft,
-              height: 1.55,
+            const SizedBox(height: 8),
+            Text(
+              l10n.reviewFormHint,
+              style: context.textTheme.bodyLarge?.copyWith(
+                color: AppColors.textSoft,
+                height: 1.55,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            l10n.ratingLabel,
-            style: context.textTheme.titleSmall?.copyWith(
-              color: AppColors.text,
+            const SizedBox(height: 24),
+            Text(
+              l10n.ratingLabel,
+              style: context.textTheme.titleSmall?.copyWith(
+                color: AppColors.text,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (i) {
-              final star = i + 1;
-              final filled = _rating >= star;
-              return IconButton(
-                onPressed: () => setState(() => _rating = star.toDouble()),
-                iconSize: 36,
-                icon: Icon(
-                  filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                  color: AppColors.accent,
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _name,
-            decoration: InputDecoration(
-              labelText: l10n.contactName,
-              prefixIcon: const Icon(Icons.person_outline_rounded),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (i) {
+                final star = i + 1;
+                final filled = _rating >= star;
+                return IconButton(
+                  onPressed: () => setState(() => _rating = star.toDouble()),
+                  iconSize: 40,
+                  icon: Icon(
+                    filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                    color: AppColors.accent,
+                  ),
+                );
+              }),
             ),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _comment,
-            maxLines: 3,
-            decoration: InputDecoration(
-              labelText: l10n.commentLabel,
-              alignLabelWithHint: true,
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _name,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                labelText: l10n.fieldFullName,
+                prefixIcon: const Icon(Icons.person_outline_rounded),
+              ),
+              validator: (v) =>
+                  (v == null || v.trim().length < 3) ? l10n.validateName : null,
             ),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _suggestions,
-            maxLines: 2,
-            decoration: InputDecoration(
-              labelText: l10n.suggestionsLabel,
-              alignLabelWithHint: true,
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _mobile,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(11),
+              ],
+              decoration: InputDecoration(
+                labelText: l10n.fieldMobile,
+                prefixIcon: const Icon(Icons.phone_iphone_rounded),
+              ),
+              validator: (v) {
+                final value = v?.trim() ?? '';
+                if (!RegExp(r'^01[0125][0-9]{8}$').hasMatch(value)) {
+                  return l10n.validateMobile;
+                }
+                return null;
+              },
             ),
-          ),
-          const SizedBox(height: 28),
-          GradientButton(
-            label: l10n.submitReview,
-            expand: true,
-            isLoading: _loading,
-            icon: Icons.send_rounded,
-            onPressed: _submit,
-          ),
-        ],
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _comment,
+              maxLines: 4,
+              decoration: InputDecoration(
+                labelText: l10n.commentLabel,
+                alignLabelWithHint: true,
+              ),
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? l10n.commentLabel : null,
+            ),
+            const SizedBox(height: 28),
+            GradientButton(
+              label: l10n.submitReview,
+              expand: true,
+              isLoading: _loading,
+              icon: Icons.send_rounded,
+              onPressed: _submit,
+            ),
+          ],
+        ),
       ),
     ).animate().fadeIn().slideY(begin: 0.05);
   }
@@ -379,7 +358,6 @@ class _TestimonialCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -414,15 +392,6 @@ class _TestimonialCard extends StatelessWidget {
               color: AppColors.text,
             ),
           ),
-          if (review.suggestions.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              '${l10n.suggestionsLabel}: ${review.suggestions}',
-              style: context.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSoft,
-              ),
-            ),
-          ],
         ],
       ),
     );

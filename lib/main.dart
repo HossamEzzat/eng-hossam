@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/constants/app_constants.dart';
+import 'package:lumina/data/repositories/session_repository.dart';
+import 'package:lumina/data/services/session_store.dart';
 import 'package:lumina/firebase/firebase_bootstrap.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 import 'package:lumina/router/app_router.dart';
@@ -15,6 +17,16 @@ Future<void> main() async {
   usePathUrlStrategy();
   GoogleFonts.config.allowRuntimeFetching = true;
   await bootstrapFirebase();
+  // Load registrations/reviews from browser localStorage before UI paints,
+  // so admin sees real students (not only the old in-memory demo seeds).
+  await SessionStore.instance.hydrate();
+  // When Firebase is on, overwrite local cache with Firestore (cross-device).
+  // Timeout so a slow/blocked Firestore never leaves a blank first paint.
+  if (AppConstants.useFirebase) {
+    await SessionRepository()
+        .syncFromRemote()
+        .timeout(const Duration(seconds: 8), onTimeout: () {});
+  }
   runApp(const ProviderScope(child: EngHossamApp()));
 }
 

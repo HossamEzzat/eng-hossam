@@ -503,7 +503,7 @@ abstract class AppLocalizations {
   /// No description provided for @reviewsSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'تقييمات حقيقية من طلاب حضروا الجلسة — بدون محتوى وهمي.'**
+  /// **'قيّم الجلسة بنجوم واكتب رأيك — اسمك ورقم موبايلك بس.'**
   String get reviewsSubtitle;
 
   /// No description provided for @reviewsCta.
@@ -599,7 +599,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'التسجيل بياخد أقل من ٣٠ ثانية.'**
+  /// **'اكتب اسمك ورقم موبايلك بس — وخلاص.'**
   String get registerSubtitle;
 
   /// No description provided for @fieldFullName.
@@ -671,7 +671,7 @@ abstract class AppLocalizations {
   /// No description provided for @submitRegister.
   ///
   /// In ar, this message translates to:
-  /// **'تأكيد التسجيل'**
+  /// **'تأكيد الحجز'**
   String get submitRegister;
 
   /// No description provided for @registerSuccessTitle.
@@ -695,7 +695,7 @@ abstract class AppLocalizations {
   /// No description provided for @saveIdHint.
   ///
   /// In ar, this message translates to:
-  /// **'احفظ الرقم ده عشان تحمّل شهادتك بعدين.'**
+  /// **'احفظ الرقم ده لو حابب تحمّل شهادتك بعدين.'**
   String get saveIdHint;
 
   /// No description provided for @backHome.
@@ -713,7 +713,7 @@ abstract class AppLocalizations {
   /// No description provided for @validateMobile.
   ///
   /// In ar, this message translates to:
-  /// **'اكتب رقم موبايل مصري صحيح (01xxxxxxxxx)'**
+  /// **'اكتب رقم موبايل مصري صحيح يبدأ بـ 010 أو 011 أو 012 أو 015'**
   String get validateMobile;
 
   /// No description provided for @validateSchool.
@@ -749,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @certificateQueryHint.
   ///
   /// In ar, this message translates to:
-  /// **'مثال: 01012345678 أو REG-2026-1001'**
+  /// **'رقم الموبايل أو رقم التسجيل'**
   String get certificateQueryHint;
 
   /// No description provided for @findCertificate.
@@ -815,25 +815,25 @@ abstract class AppLocalizations {
   /// No description provided for @reviewsPageTitle.
   ///
   /// In ar, this message translates to:
-  /// **'شارك رأيك'**
+  /// **'قيّم الجلسة'**
   String get reviewsPageTitle;
 
   /// No description provided for @reviewsPageSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'رأيك بيساعدنا نحسّن التجربة للدفعة الجاية.'**
+  /// **'نجوم + رأيك — بالاسم ورقم الموبايل فقط.'**
   String get reviewsPageSubtitle;
 
   /// No description provided for @ratingLabel.
   ///
   /// In ar, this message translates to:
-  /// **'التقييم'**
+  /// **'التقييم بالنجوم'**
   String get ratingLabel;
 
   /// No description provided for @commentLabel.
   ///
   /// In ar, this message translates to:
-  /// **'تعليقك'**
+  /// **'رأيك في الجلسة'**
   String get commentLabel;
 
   /// No description provided for @suggestionsLabel.
@@ -845,7 +845,7 @@ abstract class AppLocalizations {
   /// No description provided for @submitReview.
   ///
   /// In ar, this message translates to:
-  /// **'إرسال الرأي'**
+  /// **'إرسال التقييم'**
   String get submitReview;
 
   /// No description provided for @thanksFeedback.
@@ -1139,44 +1139,56 @@ abstract class AppLocalizations {
   /// No description provided for @reviewsEmptySubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'كن أول من يشارك تجربته بعد حضور الجلسة.'**
+  /// **'كن أول من يقيّم الجلسة — اسمك وموبايلك ونجوم ورأيك.'**
   String get reviewsEmptySubtitle;
 
   /// No description provided for @addReviewCta.
   ///
   /// In ar, this message translates to:
-  /// **'⭐ أضف تقييمك'**
+  /// **'⭐ قيّم الجلسة'**
   String get addReviewCta;
 
   /// No description provided for @shareExperience.
   ///
   /// In ar, this message translates to:
-  /// **'شارك تجربتك'**
+  /// **'شارك رأيك'**
   String get shareExperience;
 
   /// No description provided for @reviewLockedTitle.
   ///
   /// In ar, this message translates to:
-  /// **'التقييم متاح بعد اكتمال رحلتك'**
+  /// **'قيّم الجلسة بسهولة'**
   String get reviewLockedTitle;
 
   /// No description provided for @reviewLockedBody.
   ///
   /// In ar, this message translates to:
-  /// **'سجّل، احضر الجلسة، وحمل شهادتك أولاً — ثم تقدر تشارك رأيك بصدق.'**
+  /// **'اكتب اسمك ورقم موبايلك، اختَر النجوم، واكتب رأيك.'**
   String get reviewLockedBody;
 
   /// No description provided for @reviewUnlockCta.
   ///
   /// In ar, this message translates to:
-  /// **'تابع رحلتك'**
+  /// **'ابدأ التقييم'**
   String get reviewUnlockCta;
 
   /// No description provided for @reviewNotEligible.
   ///
   /// In ar, this message translates to:
-  /// **'مش هتقدر تضيف تقييم إلا بعد تحميل شهادة الحضور.'**
+  /// **'راجع الاسم ورقم الموبايل وحاول تاني.'**
   String get reviewNotEligible;
+
+  /// No description provided for @reviewAlreadySubmitted.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال تقييمك قبل كده — شكرًا!'**
+  String get reviewAlreadySubmitted;
+
+  /// No description provided for @reviewFormHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمك + رقم موبايلك + النجوم + رأيك. بس كده.'**
+  String get reviewFormHint;
 
   /// No description provided for @afterCertificateNudge.
   ///

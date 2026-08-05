@@ -5,12 +5,10 @@ import 'package:lumina/firebase/firebase_options.dart';
 
 /// Initializes Firebase when [AppConstants.useFirebase] is true; otherwise no-op.
 ///
-/// 1. Run `flutterfire configure` to fill [DefaultFirebaseOptions]
-/// 2. Set `AppConstants.useFirebase = true`
-/// 3. Enable Email/Password in Firebase Console → Authentication
+/// Project: `eng-hossam-app` — see `docs/FIREBASE.md`.
 Future<void> bootstrapFirebase() async {
   if (!AppConstants.useFirebase) {
-    debugPrint('Firebase معطّل — استخدام بيانات تجريبية.');
+    debugPrint('Firebase off — local cache only.');
     return;
   }
 
@@ -19,13 +17,10 @@ Future<void> bootstrapFirebase() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    debugPrint('تم تهيئة Firebase.');
+    debugPrint('Firebase ready (${DefaultFirebaseOptions.web.projectId}).');
   } catch (e, st) {
-    debugPrint('فشل تهيئة Firebase: $e');
+    debugPrint('Firebase init failed: $e');
     debugPrint('$st');
-    debugPrint(
-      'Tip: run `flutterfire configure` and set real options in '
-      'lib/firebase/firebase_options.dart',
-    );
+    debugPrint('See docs/FIREBASE.md');
   }
 }

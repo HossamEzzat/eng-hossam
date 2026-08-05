@@ -31,9 +31,14 @@ class AppConstants {
       'بدأوا رحلتهم البرمجية معايا. الدورة دي مصمّمة خصيصًا لطلاب أولى وتانية ثانوي '
       'في نظام البكالوريا المصرية الجديدة.';
 
-  /// When true, [FirebaseAdminAuthRepository] is used instead of local config.
-  /// Temporary email/password live only in `lib/core/config/admin_auth_config.dart`.
-  static const bool useFirebase = false;
+  /// When true, Firestore is the source of truth for registrations/reviews.
+  /// Local SharedPreferences remains an offline cache only.
+  static const bool useFirebase = true;
+
+  /// When true, admin login uses Firebase Auth + `admins/{uid}`.
+  /// Keep false until Email/Password is enabled in Firebase Console and the
+  /// owner account exists (see docs/FIREBASE.md). Local admin login still works.
+  static const bool useFirebaseAuth = false;
 
   static const double maxContentWidth = 1120;
   static const double navHeight = 72;

@@ -8,15 +8,28 @@ final sessionRepositoryProvider = Provider<SessionRepository>((ref) {
 });
 
 final sessionStoreProvider = ChangeNotifierProvider<SessionStore>((ref) {
-  return SessionStore.instance;
+  final store = SessionStore.instance;
+  // Refresh from Firestore so admin (and cache) stay cross-device.
+  if (AppConstants.useFirebase) {
+    Future.microtask(() async {
+      await ref.read(sessionRepositoryProvider).syncFromRemote();
+    });
+  }
+  return store;
 });
 
-/// students, apps, academies, awards, avgRating (public marketing counts)
+/// Explicit refresh for admin Students page / pull-to-refresh.
+final remoteSyncProvider = FutureProvider.autoDispose<void>((ref) async {
+  if (!AppConstants.useFirebase) return;
+  await ref.read(sessionRepositoryProvider).syncFromRemote();
+});
+
+/// students, apps, academies, awards, avgRating — real counts only.
 final statsProvider = Provider<(int, int, int, int, double)>((ref) {
   final store = ref.watch(sessionStoreProvider);
   return (
-    store.displaySocialProofRegistered,
-    10,
+    store.registeredCount,
+    AppConstants.companies.length,
     AppConstants.academies.length,
     AppConstants.awards.length,
     store.averageRating,

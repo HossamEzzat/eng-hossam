@@ -12,7 +12,6 @@ import 'package:lumina/data/repositories/providers.dart';
 import 'package:lumina/shared/layouts/site_shell.dart';
 import 'package:lumina/shared/widgets/glass_card.dart';
 import 'package:lumina/shared/widgets/gradient_button.dart';
-import 'package:lumina/shared/widgets/student_journey_progress.dart';
 import 'package:lumina/theme/app_colors.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
@@ -29,9 +28,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _mobile = TextEditingController();
-  final _school = TextEditingController();
 
-  String? _grade;
   bool _loading = false;
   Registration? _success;
 
@@ -39,24 +36,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   void dispose() {
     _name.dispose();
     _mobile.dispose();
-    _school.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     final l10n = context.l10n;
     if (!_formKey.currentState!.validate()) return;
-    if (_grade == null) {
-      context.showSnack(l10n.validateGrade);
-      return;
-    }
     setState(() => _loading = true);
     try {
       final reg = await ref.read(sessionRepositoryProvider).register(
             fullName: _name.text,
             mobile: _mobile.text,
-            schoolName: _school.text,
-            grade: _grade!,
           );
       if (!mounted) return;
       setState(() => _success = reg);
@@ -77,9 +67,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
         child: Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: _success != null ? 820 : 560,
-            ),
+            constraints: const BoxConstraints(maxWidth: 520),
             child:
                 _success != null ? _buildSuccess(reg: _success!) : _buildForm(),
           ),
@@ -92,7 +80,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final l10n = context.l10n;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final session = SessionCatalog.official;
-    final grades = [l10n.gradeFirst, l10n.gradeSecond];
 
     return GlassCard(
       child: Form(
@@ -134,41 +121,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       color: AppColors.text,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '📍 ${session.cityLabel(isAr)} · 📅 ${session.dateLabel(isAr)}',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSoft,
-                      height: 1.45,
-                    ),
+                  const SizedBox(height: 10),
+                  _SessionLine(
+                    Icons.place_outlined,
+                    '${session.cityLabel(isAr)} · ${session.academy(isAr)}',
                   ),
-                  Text(
-                    '🏫 ${session.academy(isAr)}',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSoft,
-                      height: 1.45,
-                    ),
+                  const SizedBox(height: 6),
+                  _SessionLine(
+                    Icons.calendar_month_outlined,
+                    '${session.dateLabel(isAr)} · ${session.timeLabel(isAr)}',
                   ),
-                  Text(
-                    '📌 ${session.address(isAr)}',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSoft,
-                      height: 1.45,
-                    ),
-                  ),
-                  Text(
-                    '🕕 ${session.timeLabel(isAr)}',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSoft,
-                      height: 1.45,
-                    ),
-                  ),
-                  Text(
-                    '👨‍🏫 ${isAr ? AppConstants.instructorNameAr : AppConstants.instructorNameEn}',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSoft,
-                      height: 1.45,
-                    ),
+                  const SizedBox(height: 6),
+                  _SessionLine(
+                    Icons.person_outline_rounded,
+                    isAr
+                        ? AppConstants.instructorNameAr
+                        : AppConstants.instructorNameEn,
                   ),
                 ],
               ),
@@ -194,7 +162,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               ],
               decoration: InputDecoration(
                 labelText: l10n.fieldMobile,
-                hintText: '01xxxxxxxxx',
                 prefixIcon: const Icon(Icons.phone_iphone_rounded),
               ),
               validator: (v) {
@@ -204,36 +171,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 }
                 return null;
               },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _school,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: l10n.fieldSchool,
-                prefixIcon: const Icon(Icons.school_outlined),
-              ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? l10n.validateSchool : null,
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              key: ValueKey(_grade),
-              isExpanded: true,
-              initialValue: _grade,
-              decoration: InputDecoration(
-                labelText: l10n.fieldGrade,
-                prefixIcon: const Icon(Icons.grade_outlined),
-              ),
-              items: [
-                for (final g in grades)
-                  DropdownMenuItem(
-                    value: g,
-                    child: Text(g, overflow: TextOverflow.ellipsis),
-                  ),
-              ],
-              onChanged: (v) => setState(() => _grade = v),
-              validator: (v) => v == null ? l10n.validateGrade : null,
             ),
             const SizedBox(height: 28),
             GradientButton(
@@ -295,15 +232,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   color: AppColors.textSoft,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.registerSuccessLine2,
-                textAlign: TextAlign.center,
-                style: context.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSoft,
-                ),
-              ),
               const SizedBox(height: 20),
               Text(
                 l10n.registrationIdLabel,
@@ -341,21 +269,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ),
         ).animate().fadeIn().scale(begin: const Offset(0.96, 0.96)),
         const SizedBox(height: 24),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 820),
-          child: StudentJourneyProgress(registration: live),
-        ),
-        const SizedBox(height: 24),
         Wrap(
           spacing: 12,
           runSpacing: 12,
           alignment: WrapAlignment.center,
           children: [
             GradientButton(
-              label: l10n.trackJourney,
-              icon: Icons.route_outlined,
+              label: l10n.addReviewCta,
+              icon: Icons.star_rounded,
               onPressed: () => context.go(
-                '/journey?q=${Uri.encodeComponent(live.registrationId)}',
+                '/reviews?mobile=${Uri.encodeComponent(live.mobile)}'
+                '&name=${Uri.encodeComponent(live.fullName)}',
               ),
             ),
             GradientButton(
@@ -365,6 +289,33 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               onPressed: () => context.go('/'),
             ),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SessionLine extends StatelessWidget {
+  const _SessionLine(this.icon, this.text);
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: AppColors.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: context.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSoft,
+              height: 1.4,
+            ),
+          ),
         ),
       ],
     );

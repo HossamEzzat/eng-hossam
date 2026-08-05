@@ -220,7 +220,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reviewsSubtitle =>
-      'تقييمات حقيقية من طلاب حضروا الجلسة — بدون محتوى وهمي.';
+      'قيّم الجلسة بنجوم واكتب رأيك — اسمك ورقم موبايلك بس.';
 
   @override
   String get reviewsCta => 'اقرأ كل الآراء';
@@ -272,7 +272,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get registerTitle => 'احجز مكانك الآن';
 
   @override
-  String get registerSubtitle => 'التسجيل بياخد أقل من ٣٠ ثانية.';
+  String get registerSubtitle => 'اكتب اسمك ورقم موبايلك بس — وخلاص.';
 
   @override
   String get fieldFullName => 'الاسم بالكامل';
@@ -308,7 +308,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sessionRegionSuez => 'السويس';
 
   @override
-  String get submitRegister => 'تأكيد التسجيل';
+  String get submitRegister => 'تأكيد الحجز';
 
   @override
   String get registerSuccessTitle => 'تم تسجيلك بنجاح 🎉';
@@ -320,7 +320,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get registrationIdLabel => 'رقم التسجيل';
 
   @override
-  String get saveIdHint => 'احفظ الرقم ده عشان تحمّل شهادتك بعدين.';
+  String get saveIdHint => 'احفظ الرقم ده لو حابب تحمّل شهادتك بعدين.';
 
   @override
   String get backHome => 'العودة للرئيسية';
@@ -329,7 +329,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get validateName => 'اكتب اسمك بالكامل';
 
   @override
-  String get validateMobile => 'اكتب رقم موبايل مصري صحيح (01xxxxxxxxx)';
+  String get validateMobile =>
+      'اكتب رقم موبايل مصري صحيح يبدأ بـ 010 أو 011 أو 012 أو 015';
 
   @override
   String get validateSchool => 'اكتب اسم المدرسة';
@@ -347,7 +348,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get certificateSubtitle => 'اكتب رقم الموبايل أو رقم التسجيل.';
 
   @override
-  String get certificateQueryHint => 'مثال: 01012345678 أو REG-2026-1001';
+  String get certificateQueryHint => 'رقم الموبايل أو رقم التسجيل';
 
   @override
   String get findCertificate => 'ابحث عن الشهادة';
@@ -380,23 +381,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get certRegId => 'رقم التسجيل';
 
   @override
-  String get reviewsPageTitle => 'شارك رأيك';
+  String get reviewsPageTitle => 'قيّم الجلسة';
 
   @override
-  String get reviewsPageSubtitle =>
-      'رأيك بيساعدنا نحسّن التجربة للدفعة الجاية.';
+  String get reviewsPageSubtitle => 'نجوم + رأيك — بالاسم ورقم الموبايل فقط.';
 
   @override
-  String get ratingLabel => 'التقييم';
+  String get ratingLabel => 'التقييم بالنجوم';
 
   @override
-  String get commentLabel => 'تعليقك';
+  String get commentLabel => 'رأيك في الجلسة';
 
   @override
   String get suggestionsLabel => 'اقتراحات (اختياري)';
 
   @override
-  String get submitReview => 'إرسال الرأي';
+  String get submitReview => 'إرسال التقييم';
 
   @override
   String get thanksFeedback => 'شكرًا على رأيك ❤️';
@@ -545,27 +545,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reviewsEmptyTitle => 'لا توجد تقييمات حتى الآن.';
 
   @override
-  String get reviewsEmptySubtitle => 'كن أول من يشارك تجربته بعد حضور الجلسة.';
+  String get reviewsEmptySubtitle =>
+      'كن أول من يقيّم الجلسة — اسمك وموبايلك ونجوم ورأيك.';
 
   @override
-  String get addReviewCta => '⭐ أضف تقييمك';
+  String get addReviewCta => '⭐ قيّم الجلسة';
 
   @override
-  String get shareExperience => 'شارك تجربتك';
+  String get shareExperience => 'شارك رأيك';
 
   @override
-  String get reviewLockedTitle => 'التقييم متاح بعد اكتمال رحلتك';
+  String get reviewLockedTitle => 'قيّم الجلسة بسهولة';
 
   @override
   String get reviewLockedBody =>
-      'سجّل، احضر الجلسة، وحمل شهادتك أولاً — ثم تقدر تشارك رأيك بصدق.';
+      'اكتب اسمك ورقم موبايلك، اختَر النجوم، واكتب رأيك.';
 
   @override
-  String get reviewUnlockCta => 'تابع رحلتك';
+  String get reviewUnlockCta => 'ابدأ التقييم';
 
   @override
-  String get reviewNotEligible =>
-      'مش هتقدر تضيف تقييم إلا بعد تحميل شهادة الحضور.';
+  String get reviewNotEligible => 'راجع الاسم ورقم الموبايل وحاول تاني.';
+
+  @override
+  String get reviewAlreadySubmitted => 'تم إرسال تقييمك قبل كده — شكرًا!';
+
+  @override
+  String get reviewFormHint => 'اسمك + رقم موبايلك + النجوم + رأيك. بس كده.';
 
   @override
   String get afterCertificateNudge =>

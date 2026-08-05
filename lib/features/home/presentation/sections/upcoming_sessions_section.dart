@@ -19,9 +19,8 @@ class UpcomingSessionsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(sessionStoreProvider);
-    final session = store.sessions.isNotEmpty
-        ? store.sessions.first
-        : SessionCatalog.official;
+    // Always the official GLC session (catalog date), never a stale list head.
+    final session = store.officialSession;
     final wide = Responsive.isWide(context);
     final l10n = context.l10n;
 
@@ -199,39 +198,21 @@ class SessionTicketCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 22),
                             _TicketMeta(
-                              icon: Icons.location_city_rounded,
-                              label: '📍 ${session.cityLabel(isAr)}',
+                              icon: Icons.place_rounded,
+                              label:
+                                  '📍 ${session.cityLabel(isAr)} · ${session.academy(isAr)}',
                             ),
                             const SizedBox(height: 10),
                             _TicketMeta(
                               icon: Icons.calendar_month_rounded,
-                              label: '📅 ${session.dateLabel(isAr)}',
-                            ),
-                            const SizedBox(height: 10),
-                            _TicketMeta(
-                              icon: Icons.school_rounded,
-                              label: '🏫 ${session.academy(isAr)}',
-                            ),
-                            const SizedBox(height: 10),
-                            _TicketMeta(
-                              icon: Icons.place_rounded,
-                              label: '📌 ${session.address(isAr)}',
-                            ),
-                            const SizedBox(height: 10),
-                            _TicketMeta(
-                              icon: Icons.schedule_rounded,
-                              label: '🕕 ${session.timeLabel(isAr)}',
+                              label:
+                                  '📅 ${session.dateLabel(isAr)} · ${session.timeLabel(isAr)}',
                             ),
                             const SizedBox(height: 10),
                             _TicketMeta(
                               icon: Icons.person_rounded,
                               label:
                                   '👨‍🏫 ${isAr ? AppConstants.instructorNameAr : AppConstants.instructorNameEn}',
-                            ),
-                            const SizedBox(height: 10),
-                            _TicketMeta(
-                              icon: Icons.groups_rounded,
-                              label: '🎯 ${session.audience(isAr)}',
                             ),
                             const SizedBox(height: 10),
                             _TicketMeta(

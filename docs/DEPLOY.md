@@ -10,9 +10,11 @@ Repo: https://github.com/HossamEzzat/eng-hossam
 ### Redeploy to GitHub Pages
 
 ```bash
-flutter build web --release --base-href /eng-hossam/ --dart-define=use_bidi=false --dart-define=use_arabic=false
+flutter build web --release --base-href /eng-hossam/ --dart-define=use_arabic=true --no-wasm-dry-run
 # then publish build/web to the gh-pages branch
 ```
+
+Firebase (registrations sync): see [`FIREBASE.md`](FIREBASE.md). Project ID: **`eng-hossam-app`**.
 
 ---
 

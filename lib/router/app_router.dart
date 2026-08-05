@@ -45,14 +45,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return loggingIn ? null : '/admin/login';
       }
 
-      // Setup is Firebase-only bootstrap; local/dev uses login only.
-      if (settingUp && !AppConstants.useFirebase) {
+      // Setup is Firebase-Auth bootstrap; local admin uses login only.
+      if (settingUp && !AppConstants.useFirebaseAuth) {
         return '/admin/login';
       }
 
       if (!auth.isAuthenticated) {
         if (loggingIn) return null;
-        if (settingUp && AppConstants.useFirebase) return null;
+        if (settingUp && AppConstants.useFirebaseAuth) return null;
         return '/admin/login';
       }
 
@@ -117,9 +117,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) {
           final reg = state.uri.queryParameters['reg'];
           final mobile = state.uri.queryParameters['mobile'];
+          final name = state.uri.queryParameters['name'];
           return buildFadeSlidePage(
             state: state,
-            child: ReviewsPage(registrationId: reg, mobile: mobile),
+            child: ReviewsPage(
+              registrationId: reg,
+              mobile: mobile,
+              name: name,
+            ),
           );
         },
       ),

@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -30,6 +28,15 @@ class _AdminStudentsPageState extends ConsumerState<AdminStudentsPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Pull latest Firestore registrations whenever admin opens Students.
+    Future.microtask(() {
+      ref.read(sessionRepositoryProvider).syncFromRemote();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final store = ref.watch(sessionStoreProvider);
     final students = ref.watch(filteredStudentsProvider);
@@ -44,12 +51,28 @@ class _AdminStudentsPageState extends ConsumerState<AdminStudentsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Students',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.text,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Students',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.text,
+                      ),
                 ),
+              ),
+              IconButton(
+                tooltip: 'Refresh from Firebase',
+                onPressed: () async {
+                  await ref.read(sessionRepositoryProvider).syncFromRemote();
+                  if (context.mounted) {
+                    adminSnack(context, 'Synced from Firebase');
+                  }
+                },
+                icon: const Icon(Icons.cloud_sync_outlined),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
@@ -161,20 +184,32 @@ class _AdminStudentsPageState extends ConsumerState<AdminStudentsPage> {
             const SizedBox(height: 12),
             _BulkBar(
               count: selected.length,
-              onAttend: () {
-                store.bulkSetAttendance(selected.toList(), attended: true);
-                adminSnack(context, 'Marked ${selected.length} as attended');
+              onAttend: () async {
+                await ref.read(sessionRepositoryProvider).bulkSetAttendance(
+                      selected.toList(),
+                      attended: true,
+                    );
+                if (context.mounted) {
+                  adminSnack(context, 'Marked ${selected.length} as attended');
+                }
                 ref.read(selectedStudentIdsProvider.notifier).state = {};
               },
-              onIssueCerts: () {
-                store.bulkSetCertificateIssued(selected.toList(), issued: true);
+              onIssueCerts: () async {
+                await ref
+                    .read(sessionRepositoryProvider)
+                    .bulkSetCertificateIssued(
+                      selected.toList(),
+                      issued: true,
+                    );
                 ref.read(notificationDispatcherProvider).enqueue(
                       NotificationRequest(
                         kind: NotificationKind.certificateReady,
                         studentIds: selected.toList(),
                       ),
                     );
-                adminSnack(context, 'Certificates issued');
+                if (context.mounted) {
+                  adminSnack(context, 'Certificates issued');
+                }
                 ref.read(selectedStudentIdsProvider.notifier).state = {};
               },
               onNotify: () {
@@ -204,7 +239,9 @@ class _AdminStudentsPageState extends ConsumerState<AdminStudentsPage> {
                   destructive: true,
                 );
                 if (!ok) return;
-                store.deleteRegistrations(selected.toList());
+                await ref
+                    .read(sessionRepositoryProvider)
+                    .deleteRegistrations(selected.toList());
                 ref.read(selectedStudentIdsProvider.notifier).state = {};
                 if (context.mounted) {
                   adminSnack(context, 'Deleted');
@@ -223,74 +260,211 @@ class _AdminStudentsPageState extends ConsumerState<AdminStudentsPage> {
                   )
                 : LayoutBuilder(
                     builder: (context, constraints) {
-                      final minTableWidth = 1100.0;
-                      return SingleChildScrollView(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minWidth: math.max(
-                                constraints.maxWidth,
-                                minTableWidth,
-                              ),
-                            ),
-                            child: PaginatedDataTable(
-                              header: const Text('Registrations'),
-                              rowsPerPage: _rowsPerPage,
-                              availableRowsPerPage: const [10, 25, 50],
-                              onRowsPerPageChanged: (v) {
-                                if (v != null) {
-                                  setState(() => _rowsPerPage = v);
-                                }
-                              },
-                              columns: const [
-                                DataColumn(label: Text('')),
-                                DataColumn(label: Text('Reg ID')),
-                                DataColumn(label: Text('Name')),
-                                DataColumn(label: Text('Mobile')),
-                                DataColumn(label: Text('School')),
-                                DataColumn(label: Text('Grade')),
-                                DataColumn(label: Text('City')),
-                                DataColumn(label: Text('Session')),
-                                DataColumn(label: Text('Registered')),
-                                DataColumn(label: Text('Attendance')),
-                                DataColumn(label: Text('Certificate')),
-                                DataColumn(label: Text('Review')),
-                                DataColumn(label: Text('Actions')),
-                              ],
-                              source: _StudentsSource(
-                                students: students,
-                                selected: selected,
-                                onToggle: (id, value) {
-                                  final next = {...selected};
-                                  if (value) {
-                                    next.add(id);
-                                  } else {
-                                    next.remove(id);
-                                  }
-                                  ref
-                                      .read(selectedStudentIdsProvider.notifier)
-                                      .state = next;
-                                },
-                                onOpen: (r) =>
-                                    showAdminStudentProfile(context, r),
-                                onAttend: (r) {
-                                  store.setAttendance(r.id, attended: true);
-                                  adminSnack(context, 'Attendance saved');
-                                },
-                                onIssue: (r) {
-                                  store.setCertificateIssued(r.id, issued: true);
-                                  adminSnack(context, 'Certificate issued');
-                                },
-                              ),
-                            ),
-                          ),
+                      void toggle(String id, bool value) {
+                        final next = {...selected};
+                        if (value) {
+                          next.add(id);
+                        } else {
+                          next.remove(id);
+                        }
+                        ref.read(selectedStudentIdsProvider.notifier).state =
+                            next;
+                      }
+
+                      Future<void> attend(Registration r) async {
+                        await ref
+                            .read(sessionRepositoryProvider)
+                            .setAttendance(r.id, attended: true);
+                        if (context.mounted) {
+                          adminSnack(context, 'Attendance saved');
+                        }
+                      }
+
+                      Future<void> issue(Registration r) async {
+                        await ref
+                            .read(sessionRepositoryProvider)
+                            .setCertificateIssued(r.id, issued: true);
+                        if (context.mounted) {
+                          adminSnack(context, 'Certificate issued');
+                        }
+                      }
+
+                      // Narrow viewports: cards. Wide: PaginatedDataTable with
+                      // bounded constraints only (no nested scroll wrappers —
+                      // those give infinite width/height and blank the table).
+                      if (constraints.maxWidth < 900) {
+                        return ListView.separated(
+                          itemCount: students.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final r = students[index];
+                            final isSelected = selected.contains(r.id);
+                            return _StudentCard(
+                              registration: r,
+                              selected: isSelected,
+                              onToggle: (v) => toggle(r.id, v),
+                              onOpen: () =>
+                                  showAdminStudentProfile(context, r),
+                              onAttend: () => attend(r),
+                              onIssue: () => issue(r),
+                            );
+                          },
+                        );
+                      }
+
+                      return PaginatedDataTable(
+                        header: const Text('Registrations'),
+                        rowsPerPage: _rowsPerPage,
+                        availableRowsPerPage: const [10, 25, 50],
+                        onRowsPerPageChanged: (v) {
+                          if (v != null) {
+                            setState(() => _rowsPerPage = v);
+                          }
+                        },
+                        showCheckboxColumn: false,
+                        columns: const [
+                          DataColumn(label: Text('')),
+                          DataColumn(label: Text('Reg ID')),
+                          DataColumn(label: Text('Name')),
+                          DataColumn(label: Text('Mobile')),
+                          DataColumn(label: Text('School')),
+                          DataColumn(label: Text('Grade')),
+                          DataColumn(label: Text('City')),
+                          DataColumn(label: Text('Session')),
+                          DataColumn(label: Text('Registered')),
+                          DataColumn(label: Text('Attendance')),
+                          DataColumn(label: Text('Certificate')),
+                          DataColumn(label: Text('Review')),
+                          DataColumn(label: Text('Actions')),
+                        ],
+                        source: _StudentsSource(
+                          students: students,
+                          selected: selected,
+                          onToggle: toggle,
+                          onOpen: (r) => showAdminStudentProfile(context, r),
+                          onAttend: attend,
+                          onIssue: issue,
                         ),
                       );
                     },
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StudentCard extends StatelessWidget {
+  const _StudentCard({
+    required this.registration,
+    required this.selected,
+    required this.onToggle,
+    required this.onOpen,
+    required this.onAttend,
+    required this.onIssue,
+  });
+
+  final Registration registration;
+  final bool selected;
+  final ValueChanged<bool> onToggle;
+  final VoidCallback onOpen;
+  final VoidCallback onAttend;
+  final VoidCallback onIssue;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = registration;
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onOpen,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Checkbox(
+                    value: selected,
+                    onChanged: (v) => onToggle(v ?? false),
+                  ),
+                  Expanded(
+                    child: Text(
+                      r.fullName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.text,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Open profile',
+                    onPressed: onOpen,
+                    icon: const Icon(Icons.open_in_new, size: 20),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 48),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      r.registrationId,
+                      style: const TextStyle(
+                        color: AppColors.textSoft,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${r.mobile} · ${r.schoolName}',
+                      style: const TextStyle(color: AppColors.textSoft),
+                    ),
+                    Text(
+                      '${r.grade} · ${r.city} · ${r.sessionLabel}',
+                      style: const TextStyle(color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        _StatusChip(r.attendanceStatus),
+                        _StatusChip(r.certificateStatus),
+                        _StatusChip(r.reviewStatus),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        TextButton.icon(
+                          onPressed: onAttend,
+                          icon: const Icon(Icons.how_to_reg_outlined, size: 18),
+                          label: const Text('Attend'),
+                        ),
+                        TextButton.icon(
+                          onPressed: onIssue,
+                          icon: const Icon(
+                            Icons.workspace_premium_outlined,
+                            size: 18,
+                          ),
+                          label: const Text('Issue cert'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

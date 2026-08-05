@@ -1,7 +1,7 @@
 name: lumina
 description: جلسات البرمجة — أ. حسام عزت · Flutter Web (عربي RTL).
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.0.9+10
 
 environment:
   sdk: ^3.12.1

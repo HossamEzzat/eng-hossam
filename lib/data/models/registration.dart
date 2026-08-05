@@ -185,7 +185,7 @@ class Registration {
       fullName: map['fullName'] as String,
       mobile: map['phone'] as String? ?? map['mobile'] as String? ?? '',
       schoolName: map['school'] as String? ?? map['schoolName'] as String? ?? '',
-      grade: map['grade'] as String,
+      grade: map['grade'] as String? ?? '',
       sessionId: map['sessionId'] as String? ?? '',
       sessionLabel: map['sessionLabel'] as String? ?? '',
       createdAt: DateTime.parse(

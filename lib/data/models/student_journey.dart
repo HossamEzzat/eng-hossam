@@ -57,7 +57,7 @@ class StudentJourney {
         return JourneyStepVisual.locked;
       case JourneyMilestone.review:
         if (reviewSubmitted) return JourneyStepVisual.completed;
-        if (certificateDownloaded) return JourneyStepVisual.current;
+        if (registrationCompleted) return JourneyStepVisual.current;
         return JourneyStepVisual.locked;
       case JourneyMilestone.completed:
         if (reviewSubmitted) return JourneyStepVisual.completed;

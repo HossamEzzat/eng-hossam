@@ -78,6 +78,20 @@ class StudentJourneyProgress extends StatelessWidget {
   List<Widget> _actionButtons(BuildContext context, StudentJourney journey) {
     final l10n = context.l10n;
     final current = journey.currentMilestone;
+    final reviewBtn = !registration.reviewSubmitted
+        ? [
+            const SizedBox(height: 14),
+            GradientButton(
+              label: '⭐ ${l10n.shareExperience}',
+              variant: GradientButtonVariant.accent,
+              onPressed: () => context.go(
+                '/reviews?mobile=${Uri.encodeComponent(registration.mobile)}'
+                '&name=${Uri.encodeComponent(registration.fullName)}',
+              ),
+            ),
+          ]
+        : const <Widget>[];
+
     switch (current) {
       case JourneyMilestone.attended:
         return [
@@ -88,6 +102,7 @@ class StudentJourneyProgress extends StatelessWidget {
               color: AppColors.textSoft,
             ),
           ),
+          ...reviewBtn,
         ];
       case JourneyMilestone.certificate:
         return [
@@ -105,6 +120,7 @@ class StudentJourneyProgress extends StatelessWidget {
             icon: Icons.workspace_premium_outlined,
             onPressed: () => context.go('/certificate'),
           ),
+          ...reviewBtn,
         ];
       case JourneyMilestone.review:
         return [
@@ -121,7 +137,8 @@ class StudentJourneyProgress extends StatelessWidget {
             label: '⭐ ${l10n.shareExperience}',
             variant: GradientButtonVariant.accent,
             onPressed: () => context.go(
-              '/reviews?reg=${Uri.encodeComponent(registration.registrationId)}&mobile=${Uri.encodeComponent(registration.mobile)}',
+              '/reviews?mobile=${Uri.encodeComponent(registration.mobile)}'
+              '&name=${Uri.encodeComponent(registration.fullName)}',
             ),
           ),
         ];
@@ -134,7 +151,7 @@ class StudentJourneyProgress extends StatelessWidget {
           ),
         ];
       case JourneyMilestone.registered:
-        return const [];
+        return reviewBtn;
     }
   }
 

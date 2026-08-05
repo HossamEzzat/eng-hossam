@@ -1,4 +1,5 @@
 rules_version = '2';
+// eng-hossam-app — public create + journey updates; admin manages all else
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -21,6 +22,42 @@ service cloud.firestore {
         && request.resource.data.role == 'admin'
         && request.resource.data.email is string
         && request.resource.data.name is string;
+    }
+
+    function validPublicRegistration() {
+      return request.resource.data.keys().hasAll([
+          'registrationId', 'fullName', 'mobile', 'schoolName', 'grade',
+          'sessionId', 'createdAt'
+        ])
+        && request.resource.data.registrationId is string
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() > 1
+        && request.resource.data.fullName.size() < 120
+        && request.resource.data.mobile is string
+        && request.resource.data.mobile.size() >= 8
+        && request.resource.data.mobile.size() <= 20
+        && request.resource.data.schoolName is string
+        && request.resource.data.grade is string
+        && request.resource.data.sessionId is string
+        && request.resource.data.createdBy == 'public';
+    }
+
+    // Certificate / journey self-service updates (no admin).
+    function publicJourneyUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly([
+          'certificateDownloaded',
+          'certificateDownloadedAt',
+          'reviewSubmitted',
+          'reviewSubmittedAt',
+          'rating',
+          'review',
+          'reviewId',
+          'lastUpdated',
+          'journeyStatus',
+          'certificateStatus',
+          'certificateApproved'
+        ]);
     }
 
     // Public bootstrap flag — readable so the app knows if first admin exists.
@@ -48,14 +85,18 @@ service cloud.firestore {
 
     match /students/{studentId} {
       allow read: if isAdmin();
-      allow create: if true;
+      allow create: if validPublicRegistration();
       allow update, delete: if isAdmin();
     }
 
+    // Canonical student registrations for this app.
+    // Read is public so certificate/journey lookup works from any phone.
+    // Writes (except limited journey fields) require admin after create.
     match /registrations/{regId} {
-      allow read: if isAdmin();
-      allow create: if true;
-      allow update, delete: if isAdmin();
+      allow read: if true;
+      allow create: if validPublicRegistration();
+      allow update: if isAdmin() || publicJourneyUpdate();
+      allow delete: if isAdmin();
     }
 
     match /sessions/{sessionId} {

@@ -18,18 +18,14 @@ flutter run -d chrome
 
 ARB files in `lib/l10n/` — switcher in navbar.
 
-## Demo
-
-Certificate lookup: `01012345678` / `REG-2026-1001`
-
 ### Admin access
 
-1. Open **`/admin`** (or `/admin/login`)
-2. Email: **`admin@enghossam.app`**
-3. Password: **`admin123`**
-4. Logout from the sidebar
+1. Open **`/admin/login`**
+2. Sign in with the owner email/password in `lib/core/config/admin_auth_config.dart`
+3. Students list syncs from **Firebase** (`eng-hossam-app`) when `useFirebase` is true
 
-Full guide: [`docs/ADMIN.md`](docs/ADMIN.md)
+Firebase setup: [`docs/FIREBASE.md`](docs/FIREBASE.md)  
+Admin guide: [`docs/ADMIN.md`](docs/ADMIN.md)
 
 Admin pages: Dashboard · Students · Sessions · **Certificates (preview)** · Reviews · Exports
 
